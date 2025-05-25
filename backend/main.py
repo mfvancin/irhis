@@ -1,12 +1,17 @@
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Depends, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from sqlalchemy.orm import Session
+from typing import List, Optional
 import uvicorn
 from api.api import api_router
 from core.config import settings
-from database import Base, engine
+from database import Base, engine, SessionLocal
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
+import crud, models, schemas
+from core.security import create_access_token, get_current_user
 
 logging.basicConfig(
     level=logging.INFO,
@@ -22,10 +27,9 @@ logger = logging.getLogger(__name__)
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
-    title=settings.PROJECT_NAME,
-    description="IRHIS - Intelligent Remote Healthcare Information System",
-    version="1.0.0",
-    openapi_url=f"{settings.API_V1_STR}/openapi.json"
+    title="IRHIS API",
+    description="Remote rehabilitation system for musculoskeletal surgery patients",
+    version="1.0.0"
 )
 
 app.add_middleware(
@@ -41,6 +45,15 @@ app.add_middleware(
     allowed_hosts=settings.ALLOWED_HOSTS
 )
 
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
     start_time = datetime.utcnow()
@@ -53,6 +66,153 @@ async def log_requests(request: Request, call_next):
     )
     
     return response
+
+@app.post("/token", response_model=schemas.Token)
+async def login_for_access_token(
+    form_data: OAuth2PasswordRequestForm = Depends(),
+    db: Session = Depends(get_db)
+):
+    user = crud.authenticate_user(db, form_data.username, form_data.password)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect username or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    access_token = create_access_token(data={"sub": user.username})
+    return {"access_token": access_token, "token_type": "bearer"}
+
+@app.post("/users/", response_model=schemas.User)
+def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
+    db_user = crud.get_user_by_email(db, email=user.email)
+    if db_user:
+        raise HTTPException(status_code=400, detail="Email already registered")
+    return crud.create_user(db=db, user=user)
+
+@app.get("/users/me", response_model=schemas.User)
+def read_users_me(current_user: models.User = Depends(get_current_user)):
+    return current_user
+
+@app.put("/users/me", response_model=schemas.User)
+def update_user_me(
+    user_update: dict,
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    return crud.update_user(db=db, user_id=current_user.id, user_update=user_update)
+
+@app.post("/sensor-data/", response_model=schemas.SensorData)
+def create_sensor_data(
+    sensor_data: schemas.SensorDataCreate,
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    return crud.create_sensor_data(db=db, sensor_data=sensor_data, user_id=current_user.id)
+
+@app.get("/sensor-data/", response_model=List[schemas.SensorData])
+def read_sensor_data(
+    skip: int = 0,
+    limit: int = 100,
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    return crud.get_sensor_data(db=db, user_id=current_user.id, skip=skip, limit=limit)
+
+@app.post("/exercises/", response_model=schemas.Exercise)
+def create_exercise(
+    exercise: schemas.ExerciseCreate,
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    return crud.create_exercise(db=db, exercise=exercise, user_id=current_user.id)
+
+@app.get("/exercises/", response_model=List[schemas.Exercise])
+def read_exercises(
+    skip: int = 0,
+    limit: int = 100,
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    return crud.get_exercises(db=db, user_id=current_user.id, skip=skip, limit=limit)
+
+@app.put("/exercises/{exercise_id}", response_model=schemas.Exercise)
+def update_exercise(
+    exercise_id: int,
+    exercise_update: dict,
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    return crud.update_exercise(db=db, exercise_id=exercise_id, exercise_update=exercise_update)
+
+@app.post("/rehabilitation-protocols/", response_model=schemas.RehabilitationProtocol)
+def create_rehabilitation_protocol(
+    protocol: schemas.RehabilitationProtocolCreate,
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    if current_user.role != models.UserRole.DOCTOR:
+        raise HTTPException(status_code=403, detail="Only doctors can create rehabilitation protocols")
+    return crud.create_rehabilitation_protocol(db=db, protocol=protocol, created_by=current_user.id)
+
+@app.get("/rehabilitation-protocols/", response_model=List[schemas.RehabilitationProtocol])
+def read_rehabilitation_protocols(
+    skip: int = 0,
+    limit: int = 100,
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    if current_user.role == models.UserRole.DOCTOR:
+        return crud.get_rehabilitation_protocols(db=db, created_by=current_user.id, skip=skip, limit=limit)
+    else:
+        return crud.get_patient_protocols(db=db, patient_id=current_user.id, skip=skip, limit=limit)
+
+@app.post("/teleconsultations/", response_model=schemas.Teleconsultation)
+def create_teleconsultation(
+    teleconsultation: schemas.TeleconsultationCreate,
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    if current_user.role != models.UserRole.PATIENT:
+        raise HTTPException(status_code=403, detail="Only patients can create teleconsultations")
+    return crud.create_teleconsultation(db=db, teleconsultation=teleconsultation, user_id=current_user.id)
+
+@app.get("/teleconsultations/", response_model=List[schemas.Teleconsultation])
+def read_teleconsultations(
+    skip: int = 0,
+    limit: int = 100,
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    return crud.get_teleconsultations(db=db, user_id=current_user.id, skip=skip, limit=limit)
+
+@app.post("/doctor-patients/", response_model=schemas.DoctorPatient)
+def create_doctor_patient(
+    doctor_patient: schemas.DoctorPatientCreate,
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    if current_user.role != models.UserRole.DOCTOR:
+        raise HTTPException(status_code=403, detail="Only doctors can create doctor-patient relationships")
+    return crud.create_doctor_patient(db=db, doctor_patient=doctor_patient)
+
+@app.get("/doctor-patients/", response_model=List[schemas.DoctorPatient])
+def read_doctor_patients(
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    if current_user.role == models.UserRole.DOCTOR:
+        return crud.get_doctor_patients(db=db, doctor_id=current_user.id)
+    else:
+        return crud.get_patient_doctors(db=db, patient_id=current_user.id)
+
+@app.put("/doctor-patients/{doctor_patient_id}", response_model=schemas.DoctorPatient)
+def update_doctor_patient_status(
+    doctor_patient_id: int,
+    status: str,
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    return crud.update_doctor_patient_status(db=db, doctor_patient_id=doctor_patient_id, status=status)
 
 app.include_router(api_router, prefix=settings.API_V1_STR)
 

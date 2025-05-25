@@ -3,7 +3,11 @@
         "autoflush",
         "idinfo",
         "IRHIS",
+        "levelname",
+        "movella",
         "paperplane",
-        "sessionmaker"
+        "sessionmaker",
+        "Teleconsultation",
+        "teleconsultations"
     ]
 }

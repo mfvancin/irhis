@@ -8,6 +8,12 @@ class UserRole(str, enum.Enum):
     DOCTOR = "doctor"
     PATIENT = "patient"
 
+class RehabilitationStatus(str, enum.Enum):
+    NOT_STARTED = "not_started"
+    IN_PROGRESS = "in_progress"
+    COMPLETED = "completed"
+    ON_HOLD = "on_hold"
+
 class User(Base):
     __tablename__ = "users"
 
@@ -26,15 +32,80 @@ class User(Base):
     last_login = Column(DateTime, nullable=True)
     specialization = Column(String, nullable=True)
     license_number = Column(String, nullable=True)
+    available_hours = Column(JSON, nullable=True)   
     medical_history = Column(JSON, nullable=True)
     current_condition = Column(String, nullable=True)
     surgery_date = Column(DateTime, nullable=True)
     surgery_type = Column(String, nullable=True)
+    rehabilitation_status = Column(Enum(RehabilitationStatus), default=RehabilitationStatus.NOT_STARTED)
+    movella_dot_id = Column(String, nullable=True)  
     health_metrics = relationship("HealthMetric", back_populates="user")
     exercises = relationship("Exercise", back_populates="user")
     digital_twins = relationship("DigitalTwinModel", back_populates="user")
     assigned_patients = relationship("DoctorPatient", back_populates="doctor")
     assigned_doctors = relationship("DoctorPatient", back_populates="patient")
+    sensor_data = relationship("SensorData", back_populates="user")
+    teleconsultations = relationship("Teleconsultation", back_populates="user")
+
+class SensorData(Base):
+    __tablename__ = "sensor_data"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"))
+    timestamp = Column(DateTime, default=func.now())
+    sensor_id = Column(String)  
+    data_type = Column(String)  
+    raw_data = Column(JSON)  
+    processed_data = Column(JSON, nullable=True)  
+    exercise_id = Column(Integer, ForeignKey("exercises.id"), nullable=True)
+    user = relationship("User", back_populates="sensor_data")
+    exercise = relationship("Exercise", back_populates="sensor_data")
+
+class Exercise(Base):
+    __tablename__ = "exercises"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"))
+    name = Column(String)
+    description = Column(Text)
+    duration_minutes = Column(Integer)
+    intensity = Column(String)
+    calories_burned = Column(Float, nullable=True)
+    completed = Column(Boolean, default=False)
+    scheduled_date = Column(DateTime)
+    completed_date = Column(DateTime, nullable=True)
+    protocol_id = Column(Integer, ForeignKey("rehabilitation_protocols.id"))
+    expected_sensor_data = Column(JSON, nullable=True)  
+    user = relationship("User", back_populates="exercises")
+    protocol = relationship("RehabilitationProtocol", back_populates="exercises")
+    sensor_data = relationship("SensorData", back_populates="exercise")
+
+class RehabilitationProtocol(Base):
+    __tablename__ = "rehabilitation_protocols"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String)
+    description = Column(Text)
+    created_by = Column(Integer, ForeignKey("users.id"))
+    created_at = Column(DateTime, default=func.now())
+    updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
+    status = Column(String)  
+    target_condition = Column(String)  
+    duration_weeks = Column(Integer)
+    exercises = relationship("Exercise", back_populates="protocol")
+
+class Teleconsultation(Base):
+    __tablename__ = "teleconsultations"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"))
+    doctor_id = Column(Integer, ForeignKey("users.id"))
+    scheduled_time = Column(DateTime)
+    duration_minutes = Column(Integer)
+    status = Column(String)  
+    notes = Column(Text, nullable=True)
+    meeting_link = Column(String, nullable=True)
+    user = relationship("User", back_populates="teleconsultations")
 
 class DoctorPatient(Base):
     __tablename__ = "doctor_patients"
@@ -43,8 +114,7 @@ class DoctorPatient(Base):
     doctor_id = Column(Integer, ForeignKey("users.id"))
     patient_id = Column(Integer, ForeignKey("users.id"))
     assigned_date = Column(DateTime, default=func.now())
-    status = Column(String)  # active, inactive, pending
-    
+    status = Column(String)  
     doctor = relationship("User", foreign_keys=[doctor_id], back_populates="assigned_patients")
     patient = relationship("User", foreign_keys=[patient_id], back_populates="assigned_doctors")
 
@@ -57,25 +127,7 @@ class HealthMetric(Base):
     metric_type = Column(String) 
     value = Column(Float)
     timestamp = Column(DateTime, default=func.now())
-
     user = relationship("User", back_populates="health_metrics")
-
-
-class Exercise(Base):
-    __tablename__ = "exercises"
-
-    id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"))
-    name = Column(String)
-    description = Column(Text)
-    duration_minutes = Column(Integer)
-    intensity = Column(String) 
-    calories_burned = Column(Float, nullable=True)
-    completed = Column(Boolean, default=False)
-    scheduled_date = Column(DateTime)
-    completed_date = Column(DateTime, nullable=True)
-    
-    user = relationship("User", back_populates="exercises")
 
 
 class DigitalTwinModel(Base):
@@ -87,7 +139,6 @@ class DigitalTwinModel(Base):
     parameters = Column(JSON)
     created_at = Column(DateTime, default=func.now())
     updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
-    
     user = relationship("User", back_populates="digital_twins")
     simulations = relationship("Simulation", back_populates="digital_twin")
 
@@ -102,5 +153,4 @@ class Simulation(Base):
     status = Column(String) 
     created_at = Column(DateTime, default=func.now())
     completed_at = Column(DateTime, nullable=True)
-    
     digital_twin = relationship("DigitalTwinModel", back_populates="simulations")
