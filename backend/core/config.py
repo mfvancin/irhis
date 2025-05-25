@@ -1,21 +1,36 @@
 from pydantic_settings import BaseSettings
+from typing import List
+import secrets
 
 class Settings(BaseSettings):
-    PROJECT_NAME: str = "TwinRehab"
+    PROJECT_NAME: str = "IRHIS"
     API_V1_STR: str = "/api/v1"
-    DATABASE_URL: str  
-    ACCESS_TOKEN: str = None
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
+    SECRET_KEY: str = secrets.token_urlsafe(32)
     ALGORITHM: str = "HS256"
-    SECRET_KEY: str = "your-secret-key"
-    BACKEND_CORS_ORIGINS: list = [
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+    DATABASE_URL: str = "postgresql://user:password@localhost/irhis"
+    ALLOWED_ORIGINS: List[str] = [
         "http://localhost:3000",
-        "http://192.168.1.190:3000",
-        "http://192.168.1.190:8081",
-        "exp://192.168.1.190:8081"
+        "http://localhost:8000",
+        "https://irhis.app"
     ]
-    GOOGLE_CLIENT_ID_IOS: str
-    GOOGLE_CLIENT_ID_ANDROID: str
+    ALLOWED_HOSTS: List[str] = ["localhost", "irhis.app"]
+    HOST: str = "0.0.0.0"
+    PORT: int = 8000
+    DEBUG_MODE: bool = True
+    DATA_RETENTION_DAYS: int = 365 * 2  # 2 years
+    ENCRYPTION_KEY: str = secrets.token_urlsafe(32)
+    SMTP_TLS: bool = True
+    SMTP_PORT: int = 587
+    SMTP_HOST: str = "smtp.gmail.com"
+    SMTP_USER: str = ""
+    SMTP_PASSWORD: str = ""
+    EMAILS_FROM_EMAIL: str = ""
+    EMAILS_FROM_NAME: str = "IRHIS"
+    GOOGLE_CLIENT_ID: str = ""
+    GOOGLE_CLIENT_SECRET: str = ""
+    AZURE_STORAGE_CONNECTION_STRING: str = ""
+    AZURE_STORAGE_CONTAINER: str = "irhis-data"
 
     class Config:
         case_sensitive = True

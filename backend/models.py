@@ -1,7 +1,12 @@
-from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, Float, DateTime, Text, JSON
+from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, Float, DateTime, Text, JSON, Enum
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from database import Base
+import enum
+
+class UserRole(str, enum.Enum):
+    DOCTOR = "doctor"
+    PATIENT = "patient"
 
 class User(Base):
     __tablename__ = "users"
@@ -11,10 +16,37 @@ class User(Base):
     username = Column(String, unique=True, index=True)
     hashed_password = Column(String)
     is_active = Column(Boolean, default=True)
-
+    role = Column(Enum(UserRole), nullable=False)
+    first_name = Column(String)
+    last_name = Column(String)
+    phone_number = Column(String, nullable=True)
+    date_of_birth = Column(DateTime, nullable=True)
+    consent_given = Column(Boolean, default=False)
+    consent_date = Column(DateTime, nullable=True)
+    last_login = Column(DateTime, nullable=True)
+    specialization = Column(String, nullable=True)
+    license_number = Column(String, nullable=True)
+    medical_history = Column(JSON, nullable=True)
+    current_condition = Column(String, nullable=True)
+    surgery_date = Column(DateTime, nullable=True)
+    surgery_type = Column(String, nullable=True)
     health_metrics = relationship("HealthMetric", back_populates="user")
     exercises = relationship("Exercise", back_populates="user")
     digital_twins = relationship("DigitalTwinModel", back_populates="user")
+    assigned_patients = relationship("DoctorPatient", back_populates="doctor")
+    assigned_doctors = relationship("DoctorPatient", back_populates="patient")
+
+class DoctorPatient(Base):
+    __tablename__ = "doctor_patients"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    doctor_id = Column(Integer, ForeignKey("users.id"))
+    patient_id = Column(Integer, ForeignKey("users.id"))
+    assigned_date = Column(DateTime, default=func.now())
+    status = Column(String)  # active, inactive, pending
+    
+    doctor = relationship("User", foreign_keys=[doctor_id], back_populates="assigned_patients")
+    patient = relationship("User", foreign_keys=[patient_id], back_populates="assigned_doctors")
 
 
 class HealthMetric(Base):
