@@ -4,6 +4,7 @@ export interface User {
   id: number;
   email: string;
   username: string;
+  role: 'doctor' | 'patient';
   dateOfBirth?: string;
   gender?: string;
   height?: number;
@@ -52,6 +53,44 @@ export interface AssignedExercise {
   feedback?: string;
 }
 
+interface ConsentDetails {
+  dataProcessing: boolean;
+  dataSharing: boolean;
+  marketing: boolean;
+  research: boolean;
+  timestamp: string;
+}
+
+interface ConsentUpdate {
+  consent_given: boolean;
+  consent_details: ConsentDetails;
+}
+
+interface ApiResponse<T> {
+  data: T;
+  message?: string;
+}
+
+interface DoctorDashboardData {
+  activePatients: number;
+  pendingConsultations: number;
+  todayExercises: number;
+  recentActivities: Array<{
+    description: string;
+    time: string;
+  }>;
+}
+
+interface PatientDashboardData {
+  completedExercises: number;
+  nextConsultation: string;
+  progressScore: number;
+  todaySchedule: Array<{
+    time: string;
+    description: string;
+  }>;
+}
+
 export const userService = {
   getUserProfile: async (userId?: number): Promise<User> => {
     const url = userId ? `/users/${userId}` : '/users/me';
@@ -92,6 +131,51 @@ export const userService = {
 
   removeAssignedExercise: async (userId: number, exerciseId: number): Promise<void> => {
     return api.delete<void>(`/users/${userId}/exercises/${exerciseId}`);
+  },
+
+  async updateConsent(userId: number, consentData: ConsentUpdate): Promise<{ message: string }> {
+    try {
+      const response = await api.put<ApiResponse<{ message: string }>>(`/users/${userId}/consent`, consentData);
+      return response.data;
+    } catch (error) {
+      throw new Error('Failed to update consent');
+    }
+  },
+
+  async getConsentStatus(userId: number): Promise<ConsentUpdate> {
+    try {
+      const response = await api.get<ApiResponse<ConsentUpdate>>(`/users/${userId}/consent`);
+      return response.data;
+    } catch (error) {
+      throw new Error('Failed to get consent status');
+    }
+  },
+
+  async withdrawConsent(userId: number): Promise<{ message: string }> {
+    try {
+      const response = await api.delete<ApiResponse<{ message: string }>>(`/users/${userId}/consent`);
+      return response.data;
+    } catch (error) {
+      throw new Error('Failed to withdraw consent');
+    }
+  },
+
+  async getDoctorDashboard(userId: number): Promise<DoctorDashboardData> {
+    try {
+      const response = await api.get<ApiResponse<DoctorDashboardData>>(`/users/${userId}/dashboard`);
+      return response.data;
+    } catch (error) {
+      throw new Error('Failed to fetch doctor dashboard data');
+    }
+  },
+
+  async getPatientDashboard(userId: number): Promise<PatientDashboardData> {
+    try {
+      const response = await api.get<ApiResponse<PatientDashboardData>>(`/users/${userId}/dashboard`);
+      return response.data;
+    } catch (error) {
+      throw new Error('Failed to fetch patient dashboard data');
+    }
   }
 };
 

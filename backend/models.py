@@ -3,6 +3,7 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from database import Base
 import enum
+from datetime import datetime
 
 class UserRole(str, enum.Enum):
     DOCTOR = "doctor"
@@ -21,14 +22,23 @@ class User(Base):
     email = Column(String, unique=True, index=True)
     username = Column(String, unique=True, index=True)
     hashed_password = Column(String)
-    is_active = Column(Boolean, default=True)
     role = Column(Enum(UserRole), nullable=False)
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    consent_given = Column(Boolean, default=False)
+    consent_details = Column(JSON)
+    consent_updated_at = Column(DateTime)
+    
+    doctor_patients = relationship("DoctorPatient", back_populates="doctor")
+    patient_doctors = relationship("DoctorPatient", back_populates="patient")
+    audit_logs = relationship("AuditLog", back_populates="user")
+    
     first_name = Column(String)
     last_name = Column(String)
     phone_number = Column(String, nullable=True)
     date_of_birth = Column(DateTime, nullable=True)
-    consent_given = Column(Boolean, default=False)
-    consent_date = Column(DateTime, nullable=True)
     last_login = Column(DateTime, nullable=True)
     specialization = Column(String, nullable=True)
     license_number = Column(String, nullable=True)
@@ -42,10 +52,17 @@ class User(Base):
     health_metrics = relationship("HealthMetric", back_populates="user")
     exercises = relationship("Exercise", back_populates="user")
     digital_twins = relationship("DigitalTwinModel", back_populates="user")
-    assigned_patients = relationship("DoctorPatient", back_populates="doctor")
-    assigned_doctors = relationship("DoctorPatient", back_populates="patient")
     sensor_data = relationship("SensorData", back_populates="user")
     teleconsultations = relationship("Teleconsultation", back_populates="user")
+
+class SensorDataType(str, enum.Enum):
+    ACCELEROMETER = "accelerometer"
+    GYROSCOPE = "gyroscope"
+    HEART_RATE = "heart_rate"
+    STEP_COUNT = "step_count"
+    SLEEP = "sleep"
+    ACTIVITY = "activity"
+    CUSTOM = "custom"
 
 class SensorData(Base):
     __tablename__ = "sensor_data"
@@ -54,10 +71,14 @@ class SensorData(Base):
     user_id = Column(Integer, ForeignKey("users.id"))
     timestamp = Column(DateTime, default=func.now())
     sensor_id = Column(String)  
-    data_type = Column(String)  
-    raw_data = Column(JSON)  
+    data_type = Column(Enum(SensorDataType))
+    device_type = Column(String)  
+    device_id = Column(String)    
+    raw_data = Column(JSON)      
     processed_data = Column(JSON, nullable=True)  
     exercise_id = Column(Integer, ForeignKey("exercises.id"), nullable=True)
+    metadata = Column(JSON, nullable=True)  
+    
     user = relationship("User", back_populates="sensor_data")
     exercise = relationship("Exercise", back_populates="sensor_data")
 
@@ -115,8 +136,8 @@ class DoctorPatient(Base):
     patient_id = Column(Integer, ForeignKey("users.id"))
     assigned_date = Column(DateTime, default=func.now())
     status = Column(String)  
-    doctor = relationship("User", foreign_keys=[doctor_id], back_populates="assigned_patients")
-    patient = relationship("User", foreign_keys=[patient_id], back_populates="assigned_doctors")
+    doctor = relationship("User", foreign_keys=[doctor_id], back_populates="doctor_patients")
+    patient = relationship("User", foreign_keys=[patient_id], back_populates="patient_doctors")
 
 
 class HealthMetric(Base):
@@ -154,3 +175,17 @@ class Simulation(Base):
     created_at = Column(DateTime, default=func.now())
     completed_at = Column(DateTime, nullable=True)
     digital_twin = relationship("DigitalTwinModel", back_populates="simulations")
+
+class AuditLog(Base):
+    __tablename__ = "audit_logs"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"))
+    action = Column(String)  
+    data_type = Column(String) 
+    details = Column(JSON)
+    timestamp = Column(DateTime, default=func.now())
+    ip_address = Column(String, nullable=True)
+    user_agent = Column(String, nullable=True)
+
+    user = relationship("User", back_populates="audit_logs")

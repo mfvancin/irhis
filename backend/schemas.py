@@ -1,16 +1,58 @@
 from pydantic import BaseModel, EmailStr, constr, validator, Field
 from typing import Optional, Annotated, List, Dict, Any
 from datetime import datetime
+import models
 from models import UserRole, RehabilitationStatus
 
 PasswordStr = Annotated[str, constr(min_length=8)]
 
 class SensorDataBase(BaseModel):
     sensor_id: str
-    data_type: str
+    data_type: models.SensorDataType
+    device_type: str
+    device_id: str
     raw_data: Dict[str, Any]
     processed_data: Optional[Dict[str, Any]] = None
     exercise_id: Optional[int] = None
+    metadata: Optional[Dict[str, Any]] = None
+
+class AccelerometerData(BaseModel):
+    x: float
+    y: float
+    z: float
+    timestamp: datetime
+    accuracy: Optional[float] = None
+
+class GyroscopeData(BaseModel):
+    x: float
+    y: float
+    z: float
+    timestamp: datetime
+    accuracy: Optional[float] = None
+
+class HeartRateData(BaseModel):
+    value: float
+    timestamp: datetime
+    confidence: Optional[float] = None
+
+class StepCountData(BaseModel):
+    count: int
+    timestamp: datetime
+    distance: Optional[float] = None
+    calories: Optional[float] = None
+
+class SleepData(BaseModel):
+    start_time: datetime
+    end_time: datetime
+    quality: Optional[str] = None
+    stages: Optional[Dict[str, float]] = None
+
+class ActivityData(BaseModel):
+    type: str
+    start_time: datetime
+    end_time: datetime
+    intensity: Optional[str] = None
+    calories: Optional[float] = None
 
 class SensorDataCreate(SensorDataBase):
     pass

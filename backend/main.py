@@ -118,6 +118,41 @@ def read_sensor_data(
 ):
     return crud.get_sensor_data(db=db, user_id=current_user.id, skip=skip, limit=limit)
 
+@app.post("/sensor-data/batch", response_model=List[schemas.SensorData])
+def create_sensor_data_batch(
+    sensor_data_list: List[schemas.SensorDataCreate],
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Create multiple sensor data entries at once."""
+    return [crud.create_sensor_data(db=db, sensor_data=data, user_id=current_user.id) 
+            for data in sensor_data_list]
+
+@app.get("/sensor-data/types", response_model=List[str])
+def get_sensor_data_types():
+    """Get all available sensor data types."""
+    return [data_type.value for data_type in models.SensorDataType]
+
+@app.get("/sensor-data/device/{device_id}", response_model=List[schemas.SensorData])
+def get_device_sensor_data(
+    device_id: str,
+    skip: int = 0,
+    limit: int = 100,
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Get sensor data for a specific device."""
+    return crud.get_device_sensor_data(db=db, device_id=device_id, user_id=current_user.id, skip=skip, limit=limit)
+
+@app.get("/sensor-data/processed/{sensor_data_id}", response_model=schemas.SensorData)
+def get_processed_sensor_data(
+    sensor_data_id: int,
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Get processed sensor data for a specific entry."""
+    return crud.get_processed_sensor_data(db=db, sensor_data_id=sensor_data_id, user_id=current_user.id)
+
 @app.post("/exercises/", response_model=schemas.Exercise)
 def create_exercise(
     exercise: schemas.ExerciseCreate,
@@ -213,6 +248,58 @@ def update_doctor_patient_status(
     db: Session = Depends(get_db)
 ):
     return crud.update_doctor_patient_status(db=db, doctor_patient_id=doctor_patient_id, status=status)
+
+@app.get("/users/{user_id}/consent", response_model=dict)
+def get_user_consent(user_id: int, db: Session = Depends(get_db)):
+    """Get user's consent status and details."""
+    return crud.get_user_consent(db, user_id)
+
+@app.put("/users/{user_id}/consent", response_model=dict)
+def update_user_consent(
+    user_id: int,
+    consent_data: dict,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
+):
+    """Update user's consent status and details."""
+    if current_user.id != user_id and current_user.role != "admin":
+        raise HTTPException(
+            status_code=403,
+            detail="Not authorized to update this user's consent"
+        )
+    return crud.update_user_consent(db, user_id, consent_data)
+
+@app.delete("/users/{user_id}/consent", response_model=dict)
+def withdraw_user_consent(
+    user_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
+):
+    """Withdraw user's consent."""
+    if current_user.id != user_id and current_user.role != "admin":
+        raise HTTPException(
+            status_code=403,
+            detail="Not authorized to withdraw this user's consent"
+        )
+    return crud.withdraw_user_consent(db, user_id)
+
+@app.get("/users/{user_id}/dashboard")
+def get_user_dashboard(
+    user_id: int,
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Get role-specific dashboard data for a user."""
+    if current_user.id != user_id and current_user.role != "admin":
+        raise HTTPException(
+            status_code=403,
+            detail="Not authorized to access this dashboard"
+        )
+    
+    if current_user.role == models.UserRole.DOCTOR:
+        return crud.get_doctor_dashboard(db, user_id)
+    else:
+        return crud.get_patient_dashboard(db, user_id)
 
 app.include_router(api_router, prefix=settings.API_V1_STR)
 

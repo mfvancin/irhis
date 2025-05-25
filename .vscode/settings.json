@@ -1,13 +1,18 @@
 {
     "cSpell.words": [
         "autoflush",
+        "Fernet",
         "idinfo",
         "IRHIS",
         "levelname",
         "movella",
+        "onupdate",
         "paperplane",
+        "pseudonymization",
+        "rneui",
         "sessionmaker",
         "Teleconsultation",
-        "teleconsultations"
+        "teleconsultations",
+        "trustedhost"
     ]
 }
