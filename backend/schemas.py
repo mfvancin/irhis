@@ -14,7 +14,7 @@ class SensorDataBase(BaseModel):
     raw_data: Dict[str, Any]
     processed_data: Optional[Dict[str, Any]] = None
     exercise_id: Optional[int] = None
-    metadata: Optional[Dict[str, Any]] = None
+    sensor_metadata: Optional[Dict[str, Any]] = None
 
 class AccelerometerData(BaseModel):
     x: float
@@ -173,6 +173,31 @@ class User(UserBase):
     surgery_type: Optional[str] = None
     rehabilitation_status: RehabilitationStatus = RehabilitationStatus.NOT_STARTED
     movella_dot_id: Optional[str] = None
+    class Config:
+        from_attributes = True
+
+class UserOut(BaseModel):
+    id: int
+    email: EmailStr
+    username: str
+    role: UserRole
+    first_name: str
+    last_name: str
+    phone_number: Optional[str] = None
+    date_of_birth: Optional[datetime] = None
+    consent_given: bool = False
+    consent_date: Optional[datetime] = None
+    last_login: Optional[datetime] = None
+    specialization: Optional[str] = None
+    license_number: Optional[str] = None
+    available_hours: Optional[Dict[str, Any]] = None
+    medical_history: Optional[Dict[str, Any]] = None
+    current_condition: Optional[str] = None
+    surgery_date: Optional[datetime] = None
+    surgery_type: Optional[str] = None
+    rehabilitation_status: RehabilitationStatus = RehabilitationStatus.NOT_STARTED
+    movella_dot_id: Optional[str] = None
+
     class Config:
         from_attributes = True
 

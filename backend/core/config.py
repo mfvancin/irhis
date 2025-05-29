@@ -37,6 +37,17 @@ class Settings(BaseSettings):
     REDIS_URL: str = os.getenv("REDIS_URL", "redis://localhost:6379")
     ENABLE_METRICS: bool = True
     METRICS_PORT: int = 9090
+    AZURE_TENANT_ID: str = os.getenv("AZURE_TENANT_ID", "")
+    AZURE_CLIENT_ID: str = os.getenv("AZURE_CLIENT_ID", "")
+    AZURE_CLIENT_SECRET: str = os.getenv("AZURE_CLIENT_SECRET", "")
+    AZURE_SUBSCRIPTION_ID: str = os.getenv("AZURE_SUBSCRIPTION_ID", "")
+    IOT_HUB_CONNECTION_STRING: str = os.getenv("IOT_HUB_CONNECTION_STRING", "")
+    APP_SERVICE_NAME: str = os.getenv("APP_SERVICE_NAME", "")
+    APP_SERVICE_RESOURCE_GROUP: str = os.getenv("APP_SERVICE_RESOURCE_GROUP", "")
+    AZURE_DEVOPS_ORG: str = os.getenv("AZURE_DEVOPS_ORG", "")
+    AZURE_DEVOPS_PAT: str = os.getenv("AZURE_DEVOPS_PAT", "")
+    PHYSITRACK_API_KEY: str = os.getenv("PHYSITRACK_API_KEY", "")
+    REHUB_API_KEY: str = os.getenv("REHUB_API_KEY", "")
 
     class Config:
         case_sensitive = True

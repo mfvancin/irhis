@@ -77,7 +77,7 @@ class SensorData(Base):
     raw_data = Column(JSON)      
     processed_data = Column(JSON, nullable=True)  
     exercise_id = Column(Integer, ForeignKey("exercises.id"), nullable=True)
-    metadata = Column(JSON, nullable=True)  
+    sensor_metadata = Column('metadata', JSON, nullable=True)
     
     user = relationship("User", back_populates="sensor_data")
     exercise = relationship("Exercise", back_populates="sensor_data")

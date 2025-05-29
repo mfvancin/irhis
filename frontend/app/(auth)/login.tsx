@@ -5,38 +5,12 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 import { API_URL } from "../constants";
 import qs from "qs";
-import * as Google from "expo-auth-session/providers/google";
-import { config } from "../config";
-
-interface GoogleResponse {
-  id_token: string;
-}
 
 const Login = () => {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
-
-  const IOS_CLIENT_ID = config.GOOGLE_CLIENT_ID_IOS;
-  const ANDROID_CLIENT_ID = config.GOOGLE_CLIENT_ID_ANDROID;
-
-  const [request, response, promptAsync] = Google.useIdTokenAuthRequest({
-    clientId: Platform.OS === 'ios' ? IOS_CLIENT_ID : ANDROID_CLIENT_ID,
-    androidClientId: ANDROID_CLIENT_ID,
-    iosClientId: IOS_CLIENT_ID,
-  });
-
-  useEffect(() => {
-    if (response?.type === 'success') {
-      const { id_token } = response.params;
-      handleGoogleLogin();
-    } else if (response?.type === 'error') {
-      setIsGoogleLoading(false);
-      Alert.alert('Login Failed', response.error?.message || 'Unknown error');
-    }
-  }, [response]);
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -114,74 +88,6 @@ const Login = () => {
     }
   };
 
-  const handleGoogleLogin = async () => {
-    try {
-      console.log('Starting Google login process...');
-      setIsGoogleLoading(true);
-      const result = await promptAsync();
-      console.log('Google login result:', result);
-
-      if (result.type === "success") {
-        const { id_token } = result.params;
-        console.log('Got ID token from Google');
-        
-        console.log('Sending token to backend...');
-        const response = await fetch(`${API_URL}/auth/google-login`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ id_token }),
-        });
-
-        console.log('Backend response status:', response.status);
-        const data = await response.json();
-        console.log('Backend response data:', data);
-
-        if (!response.ok) {
-          console.error('Google login failed with status:', response.status);
-          throw new Error(data.detail || "Google login failed");
-        }
-
-        await AsyncStorage.setItem("access_token", data.access_token);
-        console.log('Token stored successfully');
-
-        console.log('Fetching user profile...');
-        const profileResponse = await fetch(`${API_URL}/users/me`, {
-          headers: {
-            Authorization: `Bearer ${data.access_token}`,
-          },
-        });
-
-        console.log('Profile response status:', profileResponse.status);
-        if (!profileResponse.ok) {
-          console.error('Profile fetch failed with status:', profileResponse.status);
-          throw new Error("Failed to fetch user profile");
-        }
-
-        const profileData = await profileResponse.json();
-        console.log('Profile data:', profileData);
-        await AsyncStorage.setItem("userProfile", JSON.stringify(profileData));
-        
-        router.replace("/(tabs)/homepage");
-      } else {
-        console.log('Google login was not successful:', result.type);
-      }
-    } catch (error) {
-      console.error("Google login error:", error);
-      if (error instanceof Error) {
-        console.error("Error message:", error.message);
-        console.error("Error stack:", error.stack);
-      }
-      Alert.alert(
-        "Google Login Failed",
-        error instanceof Error ? error.message : "An unexpected error occurred"
-      );
-    } finally {
-      setIsGoogleLoading(false);
-    }
-  };
-
   const handleForgotPassword = () => {
     router.push("/(auth)/forgot-password");
   };
@@ -234,28 +140,6 @@ const Login = () => {
 
       <TouchableOpacity style={styles.loginButton} onPress={handleLogin} disabled={isLoading}>
         {isLoading ? <ActivityIndicator color="#fff" size="small" /> : <Text style={styles.loginButtonText}>Login</Text>}
-      </TouchableOpacity>
-
-      <TouchableOpacity>
-        <Text style={styles.lineView}></Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity
-        style={[styles.googleButton, isGoogleLoading && styles.googleButtonDisabled]}
-        onPress={() => {
-          setIsGoogleLoading(true);
-          promptAsync();
-        }}
-        disabled={isGoogleLoading}
-      >
-        {isGoogleLoading ? (
-          <ActivityIndicator color="#000" size="small" />
-        ) : (
-          <>
-            <Image source={require("../../assets/images/google.png")} style={styles.googleIcon} />
-            <Text style={styles.googleButtonText}>Continue with Google</Text>
-          </>
-        )}
       </TouchableOpacity>
 
       <View style={styles.registerContainer}>
@@ -339,33 +223,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "700",
   },
-  lineView: {
-    borderStyle: "solid",
-    borderColor: "#0d1d25",
-    borderTopWidth: 1,
-    flex: 1,
-    width: "100%",
-    height: 1,
-    marginBottom: 20,
-  },
-  googleButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 1.5,
-    borderColor: "#0d1d25",
-    padding: 15,
-    borderRadius: 16,
-  },
-  googleIcon: {
-    width: 24,
-    height: 24,
-    marginRight: 10,
-  },
-  googleButtonText: {
-    fontSize: 16,
-    color: "#0d1d25",
-  },
   registerContainer: {
     flexDirection: "row",
     justifyContent: "center",
@@ -389,9 +246,6 @@ const styles = StyleSheet.create({
     width: 16,
     height: 17,
     marginRight: 10,
-  },
-  googleButtonDisabled: {
-    opacity: 0.7,
   },
 });
 

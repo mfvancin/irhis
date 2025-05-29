@@ -1,4 +1,4 @@
-#!/Users/manuelevancin/Desktop/EUC/IRHIS/irhis/backend/venv/bin/python3.11
+#!/Users/manuelevancin/Desktop/EUC/IRHIS/irhis/backend/venv/bin/python3.13
 
 import sys
 import json

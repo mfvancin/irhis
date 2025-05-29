@@ -1,3 +1,4 @@
+import logging
 from datetime import timedelta
 from typing import Any
 from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
@@ -9,18 +10,10 @@ from api import deps
 from core import security
 from core.config import settings
 from database import get_db
-import logging
-from google.oauth2 import id_token as google_id_token
-from google.auth.transport import requests as google_requests
 
 router = APIRouter()
 
 logger = logging.getLogger(__name__)
-
-ALLOWED_GOOGLE_CLIENT_IDS = [
-    settings.GOOGLE_CLIENT_ID_IOS,
-    settings.GOOGLE_CLIENT_ID_ANDROID,
-]
 
 @router.post("/login", response_model=schemas.Token)
 def login_access_token(
@@ -84,69 +77,6 @@ def register_user(
         logger.error(f"Error during user registration: {str(e)}")
         raise HTTPException(status_code=500, detail="Internal Server Error")
 
-@router.post("/google-login", response_model=schemas.Token)
-def google_login(
-    *,
-    db: Session = Depends(get_db),
-    token_data: dict
-) -> Any:
-    """
-    Authenticate user with Google ID token
-    """
-    id_token = token_data.get("id_token")
-    if not id_token:
-        raise HTTPException(status_code=400, detail="ID token is required")
-    
-    try:
-        # Try both client IDs
-        id_info = None
-        for client_id in ALLOWED_GOOGLE_CLIENT_IDS:
-            try:
-                id_info = google_id_token.verify_oauth2_token(
-                    id_token, google_requests.Request(), client_id
-                )
-                break
-            except ValueError:
-                continue
-
-        if not id_info:
-            raise HTTPException(status_code=400, detail="Invalid Google token")
-
-        email = id_info.get("email")
-        username = id_info.get("name") or email.split('@')[0]  
-
-        if not email:
-            raise HTTPException(status_code=400, detail="Invalid Google token: missing email")
-
-        user = crud.get_user_by_email(db, email=email)
-        if not user:
-            user_in = schemas.UserCreate(
-                email=email,
-                username=username,
-                password=settings.SECRET_KEY  
-            )
-            user = crud.create_user(db, user=user_in)
-
-        if not user.is_active:
-            raise HTTPException(status_code=400, detail="Inactive user")
-
-        access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
-        access_token = security.create_access_token(
-            user.email, expires_delta=access_token_expires
-        )
-
-        return {
-            "access_token": access_token,
-            "token_type": "bearer"
-        }
-
-    except ValueError as e:
-        logger.error(f"Google token verification error: {str(e)}")
-        raise HTTPException(status_code=400, detail=f"Invalid token: {str(e)}")
-    except Exception as e:
-        logger.error(f"Google login error: {str(e)}")
-        raise HTTPException(status_code=500, detail="Internal server error")
-    
 @router.post("/forgot-password")
 def forgot_password(
     *,

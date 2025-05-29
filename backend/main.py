@@ -102,12 +102,15 @@ def update_user_me(
     return crud.update_user(db=db, user_id=current_user.id, user_update=user_update)
 
 @app.post("/sensor-data/", response_model=schemas.SensorData)
-def create_sensor_data(
+async def create_sensor_data(
     sensor_data: schemas.SensorDataCreate,
     current_user: models.User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    return crud.create_sensor_data(db=db, sensor_data=sensor_data, user_id=current_user.id)
+    # Store in database
+    db_sensor_data = crud.create_sensor_data(db=db, sensor_data=sensor_data, user_id=current_user.id)
+    
+    return db_sensor_data
 
 @app.get("/sensor-data/", response_model=List[schemas.SensorData])
 def read_sensor_data(
