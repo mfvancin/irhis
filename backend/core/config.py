@@ -1,15 +1,35 @@
 from pydantic_settings import BaseSettings
-from typing import List
+from typing import List, Optional
 import secrets
 import os
 
 class Settings(BaseSettings):
-    PROJECT_NAME: str = "IRHIS"
+    PROJECT_NAME: str = "IRHIS API"
+    VERSION: str = "1.0.0"
     API_V1_STR: str = "/api/v1"
-    SECRET_KEY: str = os.getenv("SECRET_KEY", secrets.token_urlsafe(32))
+    
+    # Main database settings
+    POSTGRES_SERVER: str = "localhost"
+    POSTGRES_USER: str = "postgres"
+    POSTGRES_PASSWORD: str = "postgres"
+    POSTGRES_DB: str = "irhis"
+    POSTGRES_PORT: str = "5432"
+    
+    # Digital twin database settings
+    DIGITAL_TWIN_POSTGRES_SERVER: str = "localhost"
+    DIGITAL_TWIN_POSTGRES_USER: str = "postgres"
+    DIGITAL_TWIN_POSTGRES_PASSWORD: str = "postgres"
+    DIGITAL_TWIN_POSTGRES_DB: str = "digital_twin"
+    DIGITAL_TWIN_POSTGRES_PORT: str = "5433"
+    
+    DATABASE_URL: Optional[str] = None
+    DIGITAL_TWIN_DATABASE_URL: Optional[str] = None
+    
+    # JWT settings
+    SECRET_KEY: str = "your-secret-key-here"  # Change this in production
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
-    DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite:///./irhis.db")
+    
     ALLOWED_ORIGINS: List[str] = ["*"]
     ALLOWED_HOSTS: List[str] = ["*"]
     HOST: str = "0.0.0.0"
@@ -49,8 +69,20 @@ class Settings(BaseSettings):
     PHYSITRACK_API_KEY: str = os.getenv("PHYSITRACK_API_KEY", "")
     REHUB_API_KEY: str = os.getenv("REHUB_API_KEY", "")
 
+    @property
+    def get_database_url(self) -> str:
+        if self.DATABASE_URL:
+            return self.DATABASE_URL
+        return f"postgresql://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{self.POSTGRES_SERVER}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
+    
+    @property
+    def get_digital_twin_database_url(self) -> str:
+        if self.DIGITAL_TWIN_DATABASE_URL:
+            return self.DIGITAL_TWIN_DATABASE_URL
+        return f"postgresql://{self.DIGITAL_TWIN_POSTGRES_USER}:{self.DIGITAL_TWIN_POSTGRES_PASSWORD}@{self.DIGITAL_TWIN_POSTGRES_SERVER}:{self.DIGITAL_TWIN_POSTGRES_PORT}/{self.DIGITAL_TWIN_POSTGRES_DB}"
+
     class Config:
-        case_sensitive = True
         env_file = ".env"
+        case_sensitive = True
 
 settings = Settings()

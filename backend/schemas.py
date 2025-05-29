@@ -252,3 +252,36 @@ class ForgotPasswordRequest(BaseModel):
 class ResetPasswordRequest(BaseModel):
     token: str
     new_password: str
+
+class DigitalTwinBase(BaseModel):
+    model_type: str
+    parameters: Dict[str, Any]
+
+class DigitalTwinCreate(DigitalTwinBase):
+    pass
+
+class DigitalTwin(DigitalTwinBase):
+    id: int
+    user_id: int
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
+
+class SimulationBase(BaseModel):
+    parameters: Dict[str, Any]
+    status: str
+
+class SimulationCreate(SimulationBase):
+    pass
+
+class Simulation(SimulationBase):
+    id: int
+    digital_twin_id: int
+    results: Optional[Dict[str, Any]] = None
+    created_at: datetime
+    completed_at: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True

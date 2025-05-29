@@ -3,8 +3,6 @@ import { Platform } from 'react-native';
 import * as Device from 'expo-device';
 import * as Sensors from 'expo-sensors';
 import { Subscription } from 'expo-modules-core';
-import { DeviceClient } from 'azure-iot-device';
-import { Mqtt as Protocol } from 'azure-iot-device-mqtt';
 
 export interface SensorData {
   sensor_id: string;
@@ -17,26 +15,10 @@ export interface SensorData {
   metadata?: any;
 }
 
-interface AzureMessage {
-  type: string;
-  rate?: number;
-  userId?: number;
-  exerciseId?: number;
-  [key: string]: any;
-}
-
-interface ConnectionStringResponse {
-  data: {
-    connectionString: string;
-  };
-}
-
 class SensorService {
   private accelerometerSubscription: Subscription | null = null;
   private gyroscopeSubscription: Subscription | null = null;
   private isCollecting: boolean = false;
-  private deviceClient: DeviceClient | null = null;
-  private isConnected: boolean = false;
 
   async initializeSensors() {
     if (!Device.isDevice()) {
@@ -50,70 +32,10 @@ class SensorService {
         console.warn('Permission to access sensors was denied');
         return false;
       }
-
-      await this.initializeAzureIoT();
-
       return true;
     } catch (error) {
       console.error('Error initializing sensors:', error);
       return false;
-    }
-  }
-
-  private async initializeAzureIoT() {
-    try {
-      const response = await api.get<ConnectionStringResponse>('/azure-iot/connection-string');
-      const connectionString = response.data.connectionString;
-
-      this.deviceClient = DeviceClient.fromConnectionString(connectionString, new Protocol());
-      
-      await this.deviceClient.open();
-      this.isConnected = true;
-      console.log('Connected to Azure IoT Hub');
-
-      this.deviceClient.on('message', this.handleAzureMessage.bind(this));
-    } catch (error) {
-      console.error('Error initializing Azure IoT Hub:', error);
-      this.isConnected = false;
-    }
-  }
-
-  private async handleAzureMessage(message: any) {
-    try {
-      const payload = JSON.parse(message.getBytes().toString()) as AzureMessage;
-      console.log('Received message from Azure IoT Hub:', payload);
-
-      switch (payload.type) {
-        case 'update_sampling_rate':
-          if (payload.rate) {
-            await this.updateSamplingRate(payload.rate);
-          }
-          break;
-        case 'start_collection':
-          if (payload.userId) {
-            await this.startCollectingSensorData(payload.userId, payload.exerciseId);
-          }
-          break;
-        case 'stop_collection':
-          this.stopCollectingSensorData();
-          break;
-        default:
-          console.warn('Unknown message type:', payload.type);
-      }
-
-      await this.deviceClient?.complete(message);
-    } catch (error) {
-      console.error('Error handling Azure IoT Hub message:', error);
-      await this.deviceClient?.reject(message);
-    }
-  }
-
-  private async updateSamplingRate(rate: number) {
-    if (this.accelerometerSubscription) {
-      Sensors.Accelerometer.setUpdateInterval(rate);
-    }
-    if (this.gyroscopeSubscription) {
-      Sensors.Gyroscope.setUpdateInterval(rate);
     }
   }
 
@@ -138,9 +60,6 @@ class SensorService {
           };
 
           await this.sendSensorData(sensorData);
-          if (this.isConnected) {
-            await this.deviceClient?.sendEvent(JSON.stringify(sensorData));
-          }
         }
       );
 
@@ -160,9 +79,6 @@ class SensorService {
           };
 
           await this.sendSensorData(sensorData);
-          if (this.isConnected) {
-            await this.deviceClient?.sendEvent(JSON.stringify(sensorData));
-          }
         }
       );
 
@@ -210,9 +126,6 @@ class SensorService {
       };
 
       await this.sendSensorData(sensorData);
-      if (this.isConnected) {
-        await this.deviceClient?.sendEvent(JSON.stringify(sensorData));
-      }
     } catch (error) {
       console.error('Error handling Apple Watch data:', error);
     }
@@ -234,9 +147,6 @@ class SensorService {
       };
 
       await this.sendSensorData(sensorData);
-      if (this.isConnected) {
-        await this.deviceClient?.sendEvent(JSON.stringify(sensorData));
-      }
     } catch (error) {
       console.error('Error handling smartwatch data:', error);
     }
@@ -244,10 +154,6 @@ class SensorService {
 
   async cleanup() {
     this.stopCollectingSensorData();
-    if (this.deviceClient && this.isConnected) {
-      await this.deviceClient.close();
-      this.isConnected = false;
-    }
   }
 }
 

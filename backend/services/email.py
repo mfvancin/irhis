@@ -12,3 +12,4 @@ def send_reset_email(email: str, reset_link: str):
         smtp.starttls()
         smtp.login("your_email", "your_password")
         smtp.send_message(msg)
+

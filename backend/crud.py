@@ -545,3 +545,55 @@ def process_activity_data(raw_data: Dict[str, Any]) -> Dict[str, Any]:
     except Exception as e:
         logger.error(f"Error processing activity data: {e}")
         return raw_data
+
+def create_digital_twin(db: Session, digital_twin: schemas.DigitalTwinCreate, user_id: int):
+    """Create a new digital twin for a user."""
+    db_digital_twin = models.DigitalTwinModel(
+        user_id=user_id,
+        model_type=digital_twin.model_type,
+        parameters=digital_twin.parameters
+    )
+    db.add(db_digital_twin)
+    db.commit()
+    db.refresh(db_digital_twin)
+    return db_digital_twin
+
+def get_digital_twins(db: Session, user_id: int, skip: int = 0, limit: int = 100):
+    """Get all digital twins for a user."""
+    return db.query(models.DigitalTwinModel)\
+        .filter(models.DigitalTwinModel.user_id == user_id)\
+        .offset(skip)\
+        .limit(limit)\
+        .all()
+
+def get_digital_twin(db: Session, digital_twin_id: int):
+    """Get a specific digital twin by ID."""
+    return db.query(models.DigitalTwinModel)\
+        .filter(models.DigitalTwinModel.id == digital_twin_id)\
+        .first()
+
+def create_simulation(db: Session, simulation: schemas.SimulationCreate, digital_twin_id: int):
+    """Create a new simulation for a digital twin."""
+    db_simulation = models.Simulation(
+        digital_twin_id=digital_twin_id,
+        parameters=simulation.parameters,
+        status=simulation.status
+    )
+    db.add(db_simulation)
+    db.commit()
+    db.refresh(db_simulation)
+    return db_simulation
+
+def get_simulations(db: Session, digital_twin_id: int, skip: int = 0, limit: int = 100):
+    """Get all simulations for a digital twin."""
+    return db.query(models.Simulation)\
+        .filter(models.Simulation.digital_twin_id == digital_twin_id)\
+        .offset(skip)\
+        .limit(limit)\
+        .all()
+
+def get_simulation(db: Session, simulation_id: int):
+    """Get a specific simulation by ID."""
+    return db.query(models.Simulation)\
+        .filter(models.Simulation.id == simulation_id)\
+        .first()
