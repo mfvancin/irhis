@@ -34,11 +34,7 @@ def get_current_user(
         payload = jwt.decode(
             token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
         )
-        email: str = payload.get("sub")
-        if email is None:
-            logger.error("No email in token payload")
-            raise credentials_exception
-        token_data = TokenData(username=email)
+        email: Optional[str] = payload.get("sub")
     except JWTError as e:
         logger.error(f"JWT decode error: {str(e)}")
         raise credentials_exception
@@ -60,7 +56,7 @@ def get_current_active_user(
 def get_current_doctor(
     current_user: models.User = Depends(get_current_active_user),
 ) -> models.User:
-    if not current_user.is_doctor:
+    if current_user.role != models.UserRole.DOCTOR:
         raise HTTPException(
             status_code=403, detail="The user doesn't have enough privileges"
         )
