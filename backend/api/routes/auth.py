@@ -4,9 +4,8 @@ from typing import Any
 from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
-import schemas, crud, models
+import schemas, crud
 from services.email import send_reset_email
-from api import deps
 from core import security
 from core.config import settings
 from database import get_db

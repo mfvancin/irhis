@@ -3,13 +3,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
-from typing import List, Optional
+from typing import List
 import uvicorn
-from api.api import api_router
 from core.config import settings
 from database import Base, engine, SessionLocal
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime
 import crud, models, schemas
 from core.security import create_access_token, get_current_user
 from api.routes import auth, users, exercises, digital_twin

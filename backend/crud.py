@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
-from sqlalchemy import and_, or_
+from sqlalchemy import or_
 from datetime import datetime
-from typing import List, Optional, Dict, Any
+from typing import Dict, Any
 import models, schemas
 from core.security import get_password_hash, verify_password
 from fastapi import HTTPException

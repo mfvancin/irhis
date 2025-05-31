@@ -4,10 +4,8 @@ from fastapi.security import OAuth2PasswordBearer
 from jose import jwt, JWTError
 from sqlalchemy.orm import Session
 import models, crud
-from core import security
 from core.config import settings
 from database import SessionLocal
-from schemas import TokenData
 import logging
 
 logger = logging.getLogger(__name__)

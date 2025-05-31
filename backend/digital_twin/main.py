@@ -1,10 +1,6 @@
 from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
-from typing import Dict, Any, List, Optional
-from datetime import datetime
 import numpy as np
 from scipy.spatial.transform import Rotation
-import json
 from backend import schemas as main_schemas
 
 router = APIRouter(

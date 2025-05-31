@@ -13,6 +13,7 @@
         "REHUB",
         "rneui",
         "sessionmaker",
+        "setex",
         "Teleconsultation",
         "teleconsultations",
         "trustedhost"
