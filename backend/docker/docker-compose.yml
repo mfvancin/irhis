@@ -10,6 +10,17 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
+  digital_twin_db:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: digital_twin
+    ports:
+      - "5433:5432"
+    volumes:
+      - digital_twin_data:/var/lib/postgresql/data
+
   web:
     build: .
     command: gunicorn -w 4 -k uvicorn.workers.UvicornWorker app.main:app
@@ -17,9 +28,12 @@ services:
       - "8000:8000"
     depends_on:
       - db
+      - digital_twin_db
     environment:
       - DATABASE_URL=postgresql://your_user:your_password@db/your_db_name
+      - DIGITAL_TWIN_DB_URL=postgresql://postgres:postgres@digital_twin_db/digital_twin
       - SECRET_KEY=your-secret-key
 
 volumes:
   postgres_data:
+  digital_twin_data:

@@ -8,14 +8,12 @@ class Settings(BaseSettings):
     VERSION: str = "1.0.0"
     API_V1_STR: str = "/api/v1"
     
-    # Main database settings
     POSTGRES_SERVER: str = "localhost"
     POSTGRES_USER: str = "postgres"
     POSTGRES_PASSWORD: str = "postgres"
     POSTGRES_DB: str = "irhis"
     POSTGRES_PORT: str = "5432"
     
-    # Digital twin database settings
     DIGITAL_TWIN_POSTGRES_SERVER: str = "localhost"
     DIGITAL_TWIN_POSTGRES_USER: str = "postgres"
     DIGITAL_TWIN_POSTGRES_PASSWORD: str = "postgres"
@@ -25,8 +23,7 @@ class Settings(BaseSettings):
     DATABASE_URL: Optional[str] = None
     DIGITAL_TWIN_DATABASE_URL: Optional[str] = None
     
-    # JWT settings
-    SECRET_KEY: str = "your-secret-key-here"  # Change this in production
+    SECRET_KEY: str = "your-secret-key-here"  # Change this in prod
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     

@@ -285,3 +285,18 @@ class Simulation(SimulationBase):
 
     class Config:
         from_attributes = True
+
+class MovellaSensorData(BaseModel):
+    device_id: str
+    timestamp: datetime
+    accelerometer: Dict[str, float]
+    gyroscope: Dict[str, float]
+    magnetometer: Optional[Dict[str, float]] = None
+
+class MovellaSimulationOutput(BaseModel):
+    device_id: str
+    timestamp: datetime
+    orientation: Dict[str, float]
+    position: Dict[str, float]
+    velocity: Dict[str, float]
+    acceleration: Dict[str, float]
