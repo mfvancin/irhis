@@ -21,7 +21,7 @@ const Login = () => {
     setIsLoading(true);
     try {
       console.log('Starting normal login process...');
-      console.log('API URL:', `${API_URL}/auth/login`);
+      console.log('API URL:', `${API_URL}/token`);
       console.log('Attempting login with:', { email });
       
       const formData = new URLSearchParams();
@@ -29,8 +29,8 @@ const Login = () => {
       formData.append('password', password);
       console.log('Request body:', formData.toString());
 
-      console.log('Sending request to:', `${API_URL}/auth/login`);
-      const response = await fetch(`${API_URL}/auth/login`, {
+      console.log('Sending request to:', `${API_URL}/token`);
+      const response = await fetch(`${API_URL}/token`, {
         method: "POST",
         headers: {
           "Content-Type": "application/x-www-form-urlencoded",

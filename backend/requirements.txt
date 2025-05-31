@@ -24,3 +24,4 @@ email-validator>=2.1.0.post1
 aiohttp>=3.9.1
 python-dateutil>=2.8.2
 pytz>=2023.3
+ 

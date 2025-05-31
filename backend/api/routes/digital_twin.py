@@ -1,18 +1,18 @@
-from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from typing import List, Optional
+from typing import List
 
 from database import get_db
 from api.deps import get_current_active_user
-from models import User, DigitalTwinModel, Simulation as SimulationModel
+from models import User
 from crud import (
-    get_user_by_email,
+    get_user,
     create_digital_twin as crud_create_digital_twin,
     get_digital_twins,
     get_digital_twin,
-    create_simulation as crud_create_simulation,
-    get_simulations,
-    get_simulation
+    create_simulation,
+    get_simulation,
+    get_simulations
 )
 from services.digital_twin import SimulationParameters, SimulationResult, simulation_controller
 from core.security import get_current_user
@@ -24,16 +24,18 @@ router = APIRouter()
 async def run_simulation(
     user_id: int,
     params: SimulationParameters,
-    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
     """
     Run a digital twin simulation for a user
     """
-    user = get_user_by_email(db, email=user_id)  
+    user = get_user(db, user_id=user_id)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
+
+    if current_user.id != user_id and current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Not authorized to access this user's data")
 
     health_metrics = user.health_metrics  
     
@@ -50,10 +52,15 @@ async def get_simulation_result(
     """
     Get results of a simulation by ID
     """
-    result = await simulation_controller.get_simulation_result(simulation_id)
-    if not result:
+    simulation = get_simulation(db, simulation_id=int(simulation_id))
+    if not simulation:
         raise HTTPException(status_code=404, detail="Simulation not found")
     
+    digital_twin = get_digital_twin(db, simulation.digital_twin_id)
+    if not digital_twin or (digital_twin.user_id != current_user.id and current_user.role != "admin"):
+        raise HTTPException(status_code=403, detail="Not authorized to access this simulation")
+    
+    result = await simulation_controller.get_simulation_result(simulation_id)
     return result
 
 @router.post("/digital-twins/", response_model=schemas.DigitalTwin)
@@ -98,7 +105,7 @@ def create_simulation(
         raise HTTPException(status_code=404, detail="Digital twin not found")
     if digital_twin.user_id != current_user.id:
         raise HTTPException(status_code=403, detail="Not authorized to create simulations for this digital twin")
-    return crud_create_simulation(db=db, simulation=simulation, digital_twin_id=digital_twin_id)
+    return create_simulation(db=db, simulation=simulation, digital_twin_id=digital_twin_id)
 
 @router.get("/simulations/", response_model=List[schemas.Simulation])
 def read_simulations(

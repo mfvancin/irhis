@@ -305,7 +305,6 @@ def get_user_dashboard(
     else:
         return crud.get_patient_dashboard(db, user_id)
 
-# Include routers
 app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
 app.include_router(users.router, prefix="/api/users", tags=["users"])
 app.include_router(exercises.router, prefix="/api/exercises", tags=["exercises"])
