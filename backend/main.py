@@ -204,25 +204,6 @@ def read_rehabilitation_protocols(
     else:
         return crud.get_patient_protocols(db=db, patient_id=current_user.id, skip=skip, limit=limit)
 
-@app.post("/teleconsultations/", response_model=schemas.Teleconsultation)
-def create_teleconsultation(
-    teleconsultation: schemas.TeleconsultationCreate,
-    current_user: models.User = Depends(get_current_user),
-    db: Session = Depends(get_db)
-):
-    if current_user.role != models.UserRole.PATIENT:
-        raise HTTPException(status_code=403, detail="Only patients can create teleconsultations")
-    return crud.create_teleconsultation(db=db, teleconsultation=teleconsultation, user_id=current_user.id)
-
-@app.get("/teleconsultations/", response_model=List[schemas.Teleconsultation])
-def read_teleconsultations(
-    skip: int = 0,
-    limit: int = 100,
-    current_user: models.User = Depends(get_current_user),
-    db: Session = Depends(get_db)
-):
-    return crud.get_teleconsultations(db=db, user_id=current_user.id, skip=skip, limit=limit)
-
 @app.post("/doctor-patients/", response_model=schemas.DoctorPatient)
 def create_doctor_patient(
     doctor_patient: schemas.DoctorPatientCreate,

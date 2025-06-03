@@ -130,28 +130,6 @@ def get_rehabilitation_protocols(db: Session, created_by: int, skip: int = 0, li
         .limit(limit)\
         .all()
 
-def create_teleconsultation(db: Session, teleconsultation: schemas.TeleconsultationCreate, user_id: int):
-    db_teleconsultation = models.Teleconsultation(
-        user_id=user_id,
-        **teleconsultation.dict()
-    )
-    db.add(db_teleconsultation)
-    db.commit()
-    db.refresh(db_teleconsultation)
-    return db_teleconsultation
-
-def get_teleconsultations(db: Session, user_id: int, skip: int = 0, limit: int = 100):
-    return db.query(models.Teleconsultation)\
-        .filter(
-            or_(
-                models.Teleconsultation.user_id == user_id,
-                models.Teleconsultation.doctor_id == user_id
-            )
-        )\
-        .offset(skip)\
-        .limit(limit)\
-        .all()
-
 def create_doctor_patient(db: Session, doctor_patient: schemas.DoctorPatientCreate):
     db_doctor_patient = models.DoctorPatient(**doctor_patient.dict())
     db.add(db_doctor_patient)

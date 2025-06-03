@@ -15,6 +15,17 @@ class RehabilitationStatus(str, enum.Enum):
     COMPLETED = "completed"
     ON_HOLD = "on_hold"
 
+class DoctorPatient(Base):
+    __tablename__ = "doctor_patients"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    doctor_id = Column(Integer, ForeignKey("users.id"))
+    patient_id = Column(Integer, ForeignKey("users.id"))
+    assigned_date = Column(DateTime, default=func.now())
+    status = Column(String)  
+    doctor = relationship("User", foreign_keys=[doctor_id], back_populates="doctor_patients")
+    patient = relationship("User", foreign_keys=[patient_id], back_populates="patient_doctors")
+
 class User(Base):
     __tablename__ = "users"
 
@@ -31,8 +42,8 @@ class User(Base):
     consent_details = Column(JSON)
     consent_updated_at = Column(DateTime)
     
-    doctor_patients = relationship("DoctorPatient", back_populates="doctor")
-    patient_doctors = relationship("DoctorPatient", back_populates="patient")
+    doctor_patients = relationship("DoctorPatient", foreign_keys=[DoctorPatient.doctor_id], back_populates="doctor")
+    patient_doctors = relationship("DoctorPatient", foreign_keys=[DoctorPatient.patient_id], back_populates="patient")
     audit_logs = relationship("AuditLog", back_populates="user")
     
     first_name = Column(String)
@@ -53,7 +64,6 @@ class User(Base):
     exercises = relationship("Exercise", back_populates="user")
     digital_twins = relationship("DigitalTwinModel", back_populates="user")
     sensor_data = relationship("SensorData", back_populates="user")
-    teleconsultations = relationship("Teleconsultation", back_populates="user")
 
 class SensorDataType(str, enum.Enum):
     ACCELEROMETER = "accelerometer"
@@ -115,31 +125,6 @@ class RehabilitationProtocol(Base):
     duration_weeks = Column(Integer)
     exercises = relationship("Exercise", back_populates="protocol")
 
-class Teleconsultation(Base):
-    __tablename__ = "teleconsultations"
-
-    id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"))
-    doctor_id = Column(Integer, ForeignKey("users.id"))
-    scheduled_time = Column(DateTime)
-    duration_minutes = Column(Integer)
-    status = Column(String)  
-    notes = Column(Text, nullable=True)
-    meeting_link = Column(String, nullable=True)
-    user = relationship("User", back_populates="teleconsultations")
-
-class DoctorPatient(Base):
-    __tablename__ = "doctor_patients"
-    
-    id = Column(Integer, primary_key=True, index=True)
-    doctor_id = Column(Integer, ForeignKey("users.id"))
-    patient_id = Column(Integer, ForeignKey("users.id"))
-    assigned_date = Column(DateTime, default=func.now())
-    status = Column(String)  
-    doctor = relationship("User", foreign_keys=[doctor_id], back_populates="doctor_patients")
-    patient = relationship("User", foreign_keys=[patient_id], back_populates="patient_doctors")
-
-
 class HealthMetric(Base):
     __tablename__ = "health_metrics"
 
@@ -149,7 +134,6 @@ class HealthMetric(Base):
     value = Column(Float)
     timestamp = Column(DateTime, default=func.now())
     user = relationship("User", back_populates="health_metrics")
-
 
 class DigitalTwinModel(Base):
     __tablename__ = "digital_twins"
@@ -162,7 +146,6 @@ class DigitalTwinModel(Base):
     updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
     user = relationship("User", back_populates="digital_twins")
     simulations = relationship("Simulation", back_populates="digital_twin")
-
 
 class Simulation(Base):
     __tablename__ = "simulations"

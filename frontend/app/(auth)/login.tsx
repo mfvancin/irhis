@@ -72,7 +72,15 @@ const Login = () => {
       console.log('Profile data:', profileData);
       await AsyncStorage.setItem("userProfile", JSON.stringify(profileData));
       
-      router.replace("/(tabs)/homepage");
+      // Role-based navigation
+      if (profileData.role === 'doctor') {
+        router.replace("/(tabs)/doctor-homepage");
+      } else if (profileData.role === 'patient') {
+        router.replace("/(tabs)/patient-homepage");
+      } else {
+        // Default fallback
+        router.replace("/(tabs)/homepage"); 
+      }
     } catch (error) {
       console.error("Login error:", error);
       if (error instanceof Error) {

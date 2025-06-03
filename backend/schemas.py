@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr, constr, validator
+from pydantic import BaseModel, EmailStr, constr, validator, Field
 from typing import Optional, Annotated, List, Dict, Any
 from datetime import datetime
 import models
@@ -104,24 +104,6 @@ class RehabilitationProtocol(RehabilitationProtocolBase):
     created_at: datetime
     updated_at: datetime
     exercises: List[Exercise] = []
-
-    class Config:
-        from_attributes = True
-
-class TeleconsultationBase(BaseModel):
-    doctor_id: int
-    scheduled_time: datetime
-    duration_minutes: int
-    status: str
-    notes: Optional[str] = None
-    meeting_link: Optional[str] = None
-
-class TeleconsultationCreate(TeleconsultationBase):
-    pass
-
-class Teleconsultation(TeleconsultationBase):
-    id: int
-    user_id: int
 
     class Config:
         from_attributes = True
@@ -300,3 +282,10 @@ class MovellaSimulationOutput(BaseModel):
     position: Dict[str, float]
     velocity: Dict[str, float]
     acceleration: Dict[str, float]
+
+class UserRegisterSimple(BaseModel):
+    email: EmailStr
+    username: str  
+    full_name: str 
+    password: PasswordStr
+    role: models.UserRole

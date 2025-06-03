@@ -1,318 +1,204 @@
 import React, { useState } from "react";
-import { Image, StyleSheet, Text, View, TextInput, TouchableOpacity, Alert, ActivityIndicator } from "react-native";
+import { Image, StyleSheet, Text, View, TextInput, TouchableOpacity, Alert, ActivityIndicator, Platform } from "react-native";
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 import { API_URL } from "../constants";
+
+// Assuming UserRole enum/type is available or defined here
+// For simplicity, using string literals. In a real app, import from a types file.
+type UserRole = "patient" | "doctor";
 
 const Register = () => {
     const router = useRouter();
 
     const [email, setEmail] = useState("");
     const [username, setUsername] = useState("");
+    const [fullName, setFullName] = useState("");
     const [password, setPassword] = useState("");
-    const [firstName, setFirstName] = useState("");
-    const [lastName, setLastName] = useState("");
-    const [phone, setPhone] = useState("");
-    const [dateOfBirth, setDateOfBirth] = useState("");
     const [isLoading, setIsLoading] = useState(false);
-    const [error, setError] = useState("");
-    const [role, setRole] = useState<"patient" | "doctor">("patient");
-    const [specialization, setSpecialization] = useState("");
-    const [licenseNumber, setLicenseNumber] = useState("");
-    const [medicalHistory, setMedicalHistory] = useState("");
-    const [currentCondition, setCurrentCondition] = useState("");
-    const [surgeryDate, setSurgeryDate] = useState("");
-    const [surgeryType, setSurgeryType] = useState("");
-
-    const handleSignUp = async () => {
-        if (!email || !password || !username || !firstName || !lastName) {
-            Alert.alert("Error", "Please fill in all required fields");
+    
+    const handleSignUp = async (role: UserRole) => {
+        if (!email || !username || !fullName || !password) {
+            Alert.alert("Error", "Please fill in all fields");
+            return;
+        }
+    
+        if (!/\S+@\S+\.\S+/.test(email)) {
+            Alert.alert("Error", "Please enter a valid email address");
             return;
         }
 
-        if (role === "doctor" && (!specialization || !licenseNumber)) {
-            Alert.alert("Error", "Please fill in all required doctor fields");
+        if (username.length < 3) {
+            Alert.alert("Error", "Username must be at least 3 characters");
             return;
         }
-
-        if (role === "patient" && (!medicalHistory || !currentCondition)) {
-            Alert.alert("Error", "Please fill in all required patient fields");
+    
+        if (password.length < 6) {
+            Alert.alert("Error", "Password must be at least 6 characters");
             return;
         }
-
+    
         setIsLoading(true);
-        setError("");
-
+    
         try {
-            const response = await axios.post(`${API_URL}/api/auth/register`, {
+            const userData = {
                 email,
-                password,
                 username,
-                first_name: firstName,
-                last_name: lastName,
-                phone_number: phone,
-                date_of_birth: dateOfBirth,
-                role,
-                specialization: role === "doctor" ? specialization : undefined,
-                license_number: role === "doctor" ? licenseNumber : undefined,
-                medical_history: role === "patient" ? medicalHistory : undefined,
-                current_condition: role === "patient" ? currentCondition : undefined,
-            });
-
-            if (response.data.access_token) {
-                await AsyncStorage.setItem("access_token", response.data.access_token);
-                router.replace("/(tabs)/homepage");
+                full_name: fullName,
+                password,
+                role // Include the role
+            };
+    
+            const response = await axios.post(`${API_URL}/api/auth/register`, userData);
+    
+            if (response.status === 200 && response.data.access_token) {                
+                await AsyncStorage.setItem('access_token', response.data.access_token);
+                
+                try {
+                    const profileResponse = await axios.get(`${API_URL}/api/users/me`, {
+                        headers: {
+                            'Authorization': `Bearer ${response.data.access_token}`
+                        }
+                    });
+                    if (profileResponse.data) {
+                        await AsyncStorage.setItem('userProfile', JSON.stringify(profileResponse.data));
+                        // Role-based navigation
+                        if (profileResponse.data.role === 'doctor') {
+                            router.replace("/(tabs)/doctor-homepage");
+                        } else if (profileResponse.data.role === 'patient') {
+                            router.replace("/(tabs)/patient-homepage");
+                        } else {
+                            // Default fallback, though ideally role is always doctor or patient
+                            router.replace("/(tabs)/homepage"); 
+                        }
+                    } else {
+                        Alert.alert("Registration Successful, Login Failed", "Could not fetch user profile.");
+                    }
+                } catch (profileError) {
+                    console.error("Profile fetch error after registration:", profileError);
+                    Alert.alert("Registration Successful, Login Failed", "Could not fetch user profile after registration.");
+                }
+            } else {
+                Alert.alert("Registration Failed", response.data.detail || "Please try again later");
             }
-        } catch (error: any) {
-            Alert.alert(
-                "Registration Failed",
-                error.response?.data?.detail || "An error occurred during registration"
-            );
+        } catch (error) {
+            console.error("Registration error:", error);
+            if (axios.isAxiosError(error) && error.response?.data?.detail) {
+                Alert.alert("Registration Failed", error.response.data.detail);
+            } else {
+                Alert.alert("Registration Failed", "An unexpected error occurred. Please try again.");
+            }
         } finally {
             setIsLoading(false);
         }
     };
-
+    
     return (
-        <View style={styles.container}>
-            <TouchableOpacity onPress={() => router.push("../landing")} style={styles.backButton}>
-                <Image source={require("../../assets/images/back.png")} style={styles.backIcon} />
-            </TouchableOpacity>
-
-            <Text style={styles.title}>Register</Text>
-            <Text style={styles.subtitle}>
-                Create your <Text style={styles.highlight}>IRHIS</Text> account!
+        <View style={styles.register}>
+          <TouchableOpacity onPress={() => router.push("/(auth)/landing")} style={styles.backButton}>
+            <Image source={require("../../assets/images/back.png")} style={styles.backIcon} />
+          </TouchableOpacity>
+          <View style={styles.signUpContainer}>
+            <Text style={styles.signUp}>Sign up</Text>
+            <Text style={styles.description}>
+              Create an <Text style={styles.highlight}>account</Text> to access all the features of
+              <Text style={styles.bold}> TWINREHAB</Text>!
             </Text>
-
-            <View style={styles.roleContainer}>
-                <TouchableOpacity
-                    style={[styles.roleButton, role === "patient" && styles.roleButtonActive]}
-                    onPress={() => setRole("patient")}
-                >
-                    <Text style={[styles.roleButtonText, role === "patient" && styles.roleButtonTextActive]}>
-                        Patient
-                    </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                    style={[styles.roleButton, role === "doctor" && styles.roleButtonActive]}
-                    onPress={() => setRole("doctor")}
-                >
-                    <Text style={[styles.roleButtonText, role === "doctor" && styles.roleButtonTextActive]}>
-                        Doctor
-                    </Text>
-                </TouchableOpacity>
+          </View>
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>Email</Text>
+            <View style={styles.inputWrapper}>
+              <Image source={require("../../assets/images/at.png")} style={styles.icon} />
+              <TextInput 
+                style={styles.input} 
+                placeholder="Ex: abc@example.com" 
+                placeholderTextColor="#c8c8c8"
+                value={email}
+                onChangeText={setEmail}
+                keyboardType="email-address"
+                autoCapitalize="none"
+              />
             </View>
-
-            <View style={styles.inputContainer}>
-                <Text style={styles.label}>Email</Text>
-                <View style={styles.inputWrapper}>
-                    <Image source={require("../../assets/images/at.png")} style={styles.icon} />
-                    <TextInput
-                        style={styles.input}
-                        placeholder="Ex: abc@example.com"
-                        placeholderTextColor="#c8c8c8"
-                        value={email}
-                        onChangeText={setEmail}
-                        keyboardType="email-address"
-                        autoCapitalize="none"
-                    />
-                </View>
+          </View>
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>Username (for login)</Text>
+            <View style={styles.inputWrapper}>
+              <Image source={require("../../assets/images/user.png")} style={styles.icon} />
+              <TextInput 
+                style={styles.input} 
+                placeholder="Choose a login username" 
+                placeholderTextColor="#c8c8c8"
+                value={username}
+                onChangeText={setUsername}
+                autoCapitalize="none"
+              />
             </View>
-
-            <View style={styles.inputContainer}>
-                <Text style={styles.label}>Username</Text>
-                <View style={styles.inputWrapper}>
-                    <Image source={require("../../assets/images/user.png")} style={styles.icon} />
-                    <TextInput
-                        style={styles.input}
-                        placeholder="Choose a username"
-                        placeholderTextColor="#c8c8c8"
-                        value={username}
-                        onChangeText={setUsername}
-                        autoCapitalize="none"
-                    />
-                </View>
+          </View>
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>Full Name (for display)</Text>
+            <View style={styles.inputWrapper}>
+              <Image source={require("../../assets/images/name.png")} style={styles.icon} />
+              <TextInput 
+                style={styles.input} 
+                placeholder="Ex: Saul Ramirez" 
+                placeholderTextColor="#c8c8c8"
+                value={fullName}
+                onChangeText={setFullName}
+              />
             </View>
-
-            <View style={styles.inputContainer}>
-                <Text style={styles.label}>Password</Text>
-                <View style={styles.inputWrapper}>
-                    <Image source={require("../../assets/images/password.png")} style={styles.icon} />
-                    <TextInput
-                        style={styles.input}
-                        placeholder="••••••••"
-                        placeholderTextColor="#c8c8c8"
-                        secureTextEntry
-                        value={password}
-                        onChangeText={setPassword}
-                    />
-                </View>
+          </View>
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>Your Password</Text>
+            <View style={styles.inputWrapper}>
+              <Image source={require("../../assets/images/password.png")} style={styles.icon} />
+              <TextInput 
+                style={styles.input} 
+                placeholder="••••••••" 
+                placeholderTextColor="#c8c8c8" 
+                secureTextEntry
+                value={password}
+                onChangeText={setPassword}
+              />
             </View>
+          </View>
 
-            <View style={styles.rowContainer}>
-                <View style={[styles.inputContainer, { flex: 1, marginRight: 10 }]}>
-                    <Text style={styles.label}>First Name</Text>
-                    <View style={styles.inputWrapper}>
-                        <TextInput
-                            style={styles.input}
-                            placeholder="First Name"
-                            placeholderTextColor="#c8c8c8"
-                            value={firstName}
-                            onChangeText={setFirstName}
-                        />
-                    </View>
-                </View>
-
-                <View style={[styles.inputContainer, { flex: 1 }]}>
-                    <Text style={styles.label}>Last Name</Text>
-                    <View style={styles.inputWrapper}>
-                        <TextInput
-                            style={styles.input}
-                            placeholder="Last Name"
-                            placeholderTextColor="#c8c8c8"
-                            value={lastName}
-                            onChangeText={setLastName}
-                        />
-                    </View>
-                </View>
-            </View>
-
-            <View style={styles.inputContainer}>
-                <Text style={styles.label}>Phone Number</Text>
-                <View style={styles.inputWrapper}>
-                    <Image source={require("../../assets/images/phone.png")} style={styles.icon} />
-                    <TextInput
-                        style={styles.input}
-                        placeholder="Enter your phone number"
-                        placeholderTextColor="#c8c8c8"
-                        value={phone}
-                        onChangeText={setPhone}
-                        keyboardType="phone-pad"
-                    />
-                </View>
-            </View>
-
-            <View style={styles.inputContainer}>
-                <Text style={styles.label}>Date of Birth</Text>
-                <View style={styles.inputWrapper}>
-                    <Image source={require("../../assets/images/calendar.png")} style={styles.icon} />
-                    <TextInput
-                        style={styles.input}
-                        placeholder="YYYY-MM-DD"
-                        placeholderTextColor="#c8c8c8"
-                        value={dateOfBirth}
-                        onChangeText={setDateOfBirth}
-                    />
-                </View>
-            </View>
-
-            {role === "doctor" ? (
-                <>
-                    <View style={styles.inputContainer}>
-                        <Text style={styles.label}>Specialization</Text>
-                        <View style={styles.inputWrapper}>
-                            <TextInput
-                                style={styles.input}
-                                placeholder="Enter your specialization"
-                                placeholderTextColor="#c8c8c8"
-                                value={specialization}
-                                onChangeText={setSpecialization}
-                            />
-                        </View>
-                    </View>
-
-                    <View style={styles.inputContainer}>
-                        <Text style={styles.label}>License Number</Text>
-                        <View style={styles.inputWrapper}>
-                            <TextInput
-                                style={styles.input}
-                                placeholder="Enter your license number"
-                                placeholderTextColor="#c8c8c8"
-                                value={licenseNumber}
-                                onChangeText={setLicenseNumber}
-                            />
-                        </View>
-                    </View>
-                </>
+          <TouchableOpacity 
+            style={styles.signUpButton}
+            onPress={() => handleSignUp("patient")}
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <ActivityIndicator color="#fff" size="small" />
             ) : (
-                <>
-                    <View style={styles.inputContainer}>
-                        <Text style={styles.label}>Medical History</Text>
-                        <View style={styles.inputWrapper}>
-                            <TextInput
-                                style={[styles.input, styles.textArea]}
-                                placeholder="Enter your medical history"
-                                placeholderTextColor="#c8c8c8"
-                                value={medicalHistory}
-                                onChangeText={setMedicalHistory}
-                                multiline
-                                numberOfLines={4}
-                            />
-                        </View>
-                    </View>
-
-                    <View style={styles.inputContainer}>
-                        <Text style={styles.label}>Current Condition</Text>
-                        <View style={styles.inputWrapper}>
-                            <TextInput
-                                style={[styles.input, styles.textArea]}
-                                placeholder="Describe your current condition"
-                                placeholderTextColor="#c8c8c8"
-                                value={currentCondition}
-                                onChangeText={setCurrentCondition}
-                                multiline
-                                numberOfLines={4}
-                            />
-                        </View>
-                    </View>
-
-                    <View style={styles.inputContainer}>
-                        <Text style={styles.label}>Surgery Date</Text>
-                        <View style={styles.inputWrapper}>
-                            <TextInput
-                                style={styles.input}
-                                placeholder="YYYY-MM-DD"
-                                placeholderTextColor="#c8c8c8"
-                                value={surgeryDate}
-                                onChangeText={setSurgeryDate}
-                            />
-                        </View>
-                    </View>
-
-                    <View style={styles.inputContainer}>
-                        <Text style={styles.label}>Surgery Type</Text>
-                        <View style={styles.inputWrapper}>
-                            <TextInput
-                                style={styles.input}
-                                placeholder="Enter surgery type"
-                                placeholderTextColor="#c8c8c8"
-                                value={surgeryType}
-                                onChangeText={setSurgeryType}
-                            />
-                        </View>
-                    </View>
-                </>
+              <Text style={styles.signUpButtonText}>Register as Patient</Text>
             )}
+          </TouchableOpacity> 
 
-            {error ? <Text style={styles.errorText}>{error}</Text> : null}
+          <TouchableOpacity 
+            style={[styles.signUpButton, styles.doctorButton]}
+            onPress={() => handleSignUp("doctor")}
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <ActivityIndicator color="#fff" size="small" />
+            ) : (
+              <Text style={styles.signUpButtonText}>Register as Doctor</Text>
+            )}
+          </TouchableOpacity> 
 
-            <TouchableOpacity style={styles.signUpButton} onPress={handleSignUp} disabled={isLoading}>
-                {isLoading ? <ActivityIndicator color="#fff" size="small" /> : <Text style={styles.signUpButtonText}>Sign Up</Text>}
+          <View style={styles.loginContainer}>
+            <Text style={styles.alreadyHaveAccount}>Already have an account?</Text>
+            <TouchableOpacity onPress={() => router.push("/login")}> 
+              <Text style={styles.login}>Login</Text>
             </TouchableOpacity>
-
-            <View style={styles.loginContainer}>
-                <Text style={styles.loginText}>Already have an account?</Text>
-                <TouchableOpacity onPress={() => router.push("/(auth)/login")}>
-                    <Text style={styles.loginLink}>Login</Text>
-                </TouchableOpacity>
-            </View>
+          </View>
         </View>
-    );
-};
+      );
+    };
 
 const styles = StyleSheet.create({
-    container: {
+    register: {
         flex: 1,
         backgroundColor: "#fff",
         padding: 20,
@@ -329,13 +215,15 @@ const styles = StyleSheet.create({
         height: 30,
         marginBottom: 10,
     },
-    title: {
+    signUpContainer: {
+        marginBottom: 30,
+    },
+    signUp: {
         fontSize: 32,
         fontWeight: "700",
         color: "#4da1ce",
-        marginBottom: 10,
     },
-    subtitle: {
+    description: {
         fontSize: 16,
         color: "#0d1d25",
         marginTop: 10,
@@ -344,8 +232,11 @@ const styles = StyleSheet.create({
         color: "#5cc2f8",
         fontWeight: "700",
     },
+    bold: {
+        fontWeight: "bold",
+    },
     inputContainer: {
-        marginBottom: 20,
+        marginBottom: 15, // Reduced margin
     },
     label: {
         fontSize: 16,
@@ -371,52 +262,18 @@ const styles = StyleSheet.create({
         fontSize: 16,
         color: "#0d1d25",
     },
-    roleContainer: {
-        flexDirection: 'row',
-        marginBottom: 20,
-        borderRadius: 8,
-        overflow: 'hidden',
-        borderWidth: 1,
-        borderColor: '#4da1ce',
-    },
-    roleButton: {
-        flex: 1,
-        paddingVertical: 12,
-        alignItems: 'center',
-        backgroundColor: '#fff',
-    },
-    roleButtonActive: {
-        backgroundColor: '#4da1ce',
-    },
-    roleButtonText: {
-        fontSize: 16,
-        color: '#4da1ce',
-        fontWeight: '600',
-    },
-    roleButtonTextActive: {
-        color: '#fff',
-    },
-    rowContainer: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-    },
-    textArea: {
-        height: 100,
-        textAlignVertical: 'top',
-    },
-    errorText: {
-        color: 'red',
-        marginTop: 10,
-        textAlign: 'center',
-    },
     signUpButton: {
         backgroundColor: "#4da1ce",
         padding: 15,
         borderRadius: 16,
         alignItems: "center",
-        marginVertical: 20,
+        marginTop: 10, // Adjusted margin
+        marginBottom: 5, // Adjusted margin
     },
-    signUpButtonText: {
+    doctorButton: {
+        backgroundColor: "#1E4D7B", // Different color for doctor button
+    },
+    signUpButtonText: { // Renamed from signUpText for clarity
         fontSize: 16,
         color: "#fff",
         fontWeight: "700",
@@ -426,11 +283,11 @@ const styles = StyleSheet.create({
         justifyContent: "center",
         marginTop: 20,
     },
-    loginText: {
+    alreadyHaveAccount: {
         fontSize: 16,
         color: "#0d1d25",
     },
-    loginLink: {
+    login: {
         fontSize: 16,
         color: "#4da1ce",
         textDecorationLine: "underline",

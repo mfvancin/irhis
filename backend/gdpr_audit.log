@@ -1,0 +1,5 @@
+2025-06-03 11:28:06,443 - api.routes.auth - INFO - Registration attempt for email: mail@mail.com, username: usermail
+2025-06-03 11:29:23,386 - api.routes.auth - INFO - Registration attempt for email: mail@mail.com, username: usermail
+2025-06-03 11:30:23,036 - api.routes.auth - INFO - Registration attempt for email: mail@mail.com, username: usermail
+2025-06-03 11:31:41,970 - api.routes.auth - INFO - Registration attempt for email: mail@mail.com, username: usermail
+2025-06-03 11:33:08,949 - api.routes.auth - INFO - Registration attempt for email: mail@mail.com, username: usermail
