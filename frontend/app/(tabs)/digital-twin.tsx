@@ -4,6 +4,7 @@ import { useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Tab, TabView } from '@rneui/themed';
 import DigitalTwinSimulation from '../(components)/DigitalTwin/DigitalTwinSimulation';
+import MovellaKinematicsViewer from '../(components)/DigitalTwin/MovellaKinematicsViewer';
 import userService from '../(services)/userService';
 import { Patient } from '../(types)/models';
 
@@ -20,16 +21,16 @@ export default function DigitalTwinScreen() {
       
       try {
         const user = await userService.getUserProfile(parseInt(id));
-        const patient: Patient = {
+        const patientData: Patient = {
           id: user.id,
-          firstName: user.username.split(' ')[0] || '',
+          firstName: user.username.split(' ')[0] || user.username,
           lastName: user.username.split(' ')[1] || '',
-          age: 0, 
-          gender: user.gender || '',
-          healthStatus: 'Unknown', 
+          age: user.dateOfBirth ? new Date().getFullYear() - new Date(user.dateOfBirth).getFullYear() : 0,
+          gender: user.gender || 'Unknown',
+          healthStatus: 'Unknown',
           medicalHistory: user.medicalConditions || [],
-          currentMedications: [], 
-          vitalSigns: { 
+          currentMedications: [],
+          vitalSigns: {
             heartRate: 0,
             bloodPressure: { systolic: 0, diastolic: 0 },
             temperature: 0,
@@ -38,7 +39,7 @@ export default function DigitalTwinScreen() {
             lastUpdated: new Date().toISOString()
           }
         };
-        setPatient(patient);
+        setPatient(patientData);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load patient data');
       } finally {
@@ -75,7 +76,7 @@ export default function DigitalTwinScreen() {
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Not Found</Text>
           <View style={styles.divider} />
-          <Text>Patient not found</Text>
+          <Text>Patient not found for ID: {id}</Text>
         </View>
       </SafeAreaView>
     );
@@ -114,16 +115,22 @@ export default function DigitalTwinScreen() {
             onChange={setTabIndex}
             indicatorStyle={{ backgroundColor: '#1976d2' }}
             variant="primary"
+            scrollable
           >
             <Tab.Item
-              title="Simulation"
+              title="Hypothetical Simulations"
               titleStyle={styles.tabTitle}
               containerStyle={tabIndex === 0 ? styles.activeTab : styles.tab}
             />
             <Tab.Item
-              title="Information"
+              title="Movella Kinematics"
               titleStyle={styles.tabTitle}
               containerStyle={tabIndex === 1 ? styles.activeTab : styles.tab}
+            />
+            <Tab.Item
+              title="Info"
+              titleStyle={styles.tabTitle}
+              containerStyle={tabIndex === 2 ? styles.activeTab : styles.tab}
             />
           </Tab>
           
@@ -132,6 +139,10 @@ export default function DigitalTwinScreen() {
               {id && <DigitalTwinSimulation patientId={parseInt(id)} />}
             </TabView.Item>
             
+            <TabView.Item style={styles.tabContent}>
+              <MovellaKinematicsViewer />
+            </TabView.Item>
+
             <TabView.Item style={styles.tabContent}>
               <View style={styles.infoContainer}>
                 <Text style={styles.infoTitle}>What is a Digital Twin?</Text>
@@ -142,21 +153,16 @@ export default function DigitalTwinScreen() {
                   virtual environment before applying them to real patients.
                 </Text>
                 
-                <Text style={styles.infoTitle}>How to Use This Simulation</Text>
+                <Text style={styles.infoTitle}>Movella DOT Kinematics</Text>
                 <Text style={styles.infoText}>
-                  1. Select a simulation scenario from the dropdown menu.{'\n'}
-                  2. Adjust the duration and parameters as needed.{'\n'}
-                  3. Click "Run Simulation" to generate results.{'\n'}
-                  4. Analyze the resulting charts and recommendations.{'\n'}
-                  5. Share findings with healthcare providers to inform treatment decisions.
+                  This section allows processing of data from a Movella DOT sensor to calculate and visualize kinematic parameters like orientation, position, velocity, and acceleration.
+                  Input sample JSON data from the sensor and click 'Process Movella Data' to see the results.
                 </Text>
-                
+
                 <Text style={styles.infoTitle}>Important Notes</Text>
                 <Text style={styles.infoText}>
-                  • This simulation is based on patient data and medical models, but results should be 
-                    considered as estimates, not definitive predictions.{'\n'}
-                  • Always consult with healthcare providers before making medical decisions.{'\n'}
-                  • The digital twin is continuously updated with new patient data to improve accuracy.
+                  • Simulation results are estimates, not definitive predictions. Always consult with healthcare providers for medical decisions.
+                  • The digital twin functionality is continuously updated with new patient data and models to improve accuracy.
                 </Text>
               </View>
             </TabView.Item>

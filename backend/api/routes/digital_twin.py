@@ -4,7 +4,7 @@ from typing import List
 
 from database import get_db
 from api.deps import get_current_active_user
-from models import User
+from models import User  
 from crud import (
     get_user,
     create_digital_twin as crud_create_digital_twin,

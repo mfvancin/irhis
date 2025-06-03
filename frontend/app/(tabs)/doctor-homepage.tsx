@@ -1,77 +1,97 @@
-import * as React from "react";
-import { StyleSheet, View, Text, Image, TouchableOpacity, ScrollView, StatusBar } from "react-native";
-import { useNavigation } from "@react-navigation/native";
-import { router } from "expo-router";
+import React, { useEffect, useState } from "react";
+import { StyleSheet, View, Text, Image, TouchableOpacity, ScrollView, StatusBar, ActivityIndicator, Alert } from "react-native";
+import { useRouter } from "expo-router";
 import Header from "../(components)/ScreenComponents/Header";
+import api from "../(services)/api"; 
 
-export default function DoctorHomepage() { // Renamed component
-    const navigation = useNavigation();
+interface DoctorPatientListItem {
+    id: number; 
+    assigned_date: string;
+    status: string;
+    patient: {
+        id: number; 
+        email: string;
+        username: string;
+        first_name: string;
+        last_name: string;
+    };
+}
+
+export default function DoctorHomepage() {
+    const router = useRouter();
+    const [assignedPatients, setAssignedPatients] = useState<DoctorPatientListItem[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchAssignedPatients = async () => {
+            setIsLoading(true);
+            try {
+                const response = await api.get<DoctorPatientListItem[]>("/doctor-patients/");
+                setAssignedPatients(response || []); // api.get returns data directly or throws
+            } catch (error) {
+                console.error("Error fetching assigned patients:", error);
+                Alert.alert("Error", "Could not fetch your patients.");
+                setAssignedPatients([]); // Clear patients on error
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchAssignedPatients();
+    }, []);
+
+    if (isLoading) {
+        return (
+            <View style={styles.loadingContainer}>
+                <ActivityIndicator size="large" color="#2a5b7e" />
+            </View>
+        );
+    }
 
     return (
         <View style={styles.container}>
-        <StatusBar barStyle="dark-content" />
-        <Header />
-        <ScrollView style={styles.contentContainer}>
-            <Text style={styles.sectionTitle}>Doctor's Patients</Text> {/* Changed title */}
-            {/* Placeholder for fetching and displaying doctor's patients */}
-            {patients.map((patient, index) => (
-                <TouchableOpacity key={index} style={styles.patientCard}
-                    onPress={() => router.push({
-                        pathname: "/patient", // This might need to be a doctor-specific patient view
-                        params: { patientId: patient.id } // Pass patientId
-                    })}
-                >
-                    <Image style={styles.patientImage} source={patient.image || require("../../assets/images/user.png")} />
-                    <View style={styles.patientInfo}>
-                        <Text style={styles.patientName}>{patient.name}</Text>
-                        <Text style={styles.patientDetails}>{patient.age} years old {patient.gender}, {patient.details}</Text>
-                    </View>
-                </TouchableOpacity>
-            ))}
-        </ScrollView>
+            <StatusBar barStyle="dark-content" />
+            <Header />
+            <ScrollView style={styles.contentContainer}>
+                <Text style={styles.sectionTitle}>Your Patients</Text>
+                {assignedPatients.length === 0 && !isLoading ? (
+                    <Text style={styles.noPatientsText}>You currently have no patients assigned.</Text>
+                ) : (
+                    assignedPatients.map((item) => (
+                        <TouchableOpacity 
+                            key={item.patient.id} // Use patient user ID as key for the list item
+                            style={styles.patientCard}
+                            onPress={() => router.push({
+                                pathname: "/(tabs)/patient", // Navigate to the generic patient screen for now
+                                params: { id: item.patient.id.toString() } // Pass patient user ID
+                            })}
+                        >
+                            {/* You might want a placeholder image or a generic one */}
+                            <Image style={styles.patientImage} source={require("../../assets/images/user.png")} />
+                            <View style={styles.patientInfo}>
+                                <Text style={styles.patientName}>{item.patient.first_name} {item.patient.last_name}</Text>
+                                <Text style={styles.patientDetails}>Username: {item.patient.username}</Text>
+                                <Text style={styles.patientDetails}>Email: {item.patient.email}</Text>
+                                <Text style={styles.patientDetails}>Status: {item.status}</Text>
+                                <Text style={styles.patientDetails}>Assigned: {new Date(item.assigned_date).toLocaleDateString()}</Text>
+                            </View>
+                        </TouchableOpacity>
+                    ))
+                )}
+            </ScrollView>
         </View>
     );
 }
-
-// Sample data - replace with actual data fetching
-const patients = [
-    {
-        id: "1",
-        name: "Patient 1", 
-        age: 40,
-        gender: "male",
-        details: "right knee surgery, BMI 20, normal gait.",
-        image: require("../../assets/images/patient1.png")
-    },
-    {
-        id: "2",
-        name: "Patient 2", 
-        age: 35,
-        gender: "female",
-        details: "left hip replacement, BMI 22, slight limp.",
-        image: require("../../assets/images/user.png")
-    },
-    {
-        id: "3",
-        name: "Patient 3", 
-        age: 45,
-        gender: "male",
-        details: "shoulder reconstruction, BMI 24, good mobility.",
-        image: require("../../assets/images/user.png")
-    }
-];
 
 const styles = StyleSheet.create({
     container: { 
         flex: 1, 
         backgroundColor: "#fff" 
     },
-    filterText: {
-        color: "#fff",
-        fontWeight: "500"
-    },
-    spacer: {
-        flex: 1
+    loadingContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center'
     },
     contentContainer: { 
         flex: 1, 
@@ -90,7 +110,8 @@ const styles = StyleSheet.create({
         borderWidth: 1, 
         borderColor: "#E5E7EB", 
         borderRadius: 15, 
-        marginBottom: 10 
+        marginBottom: 10,
+        backgroundColor: '#f9f9f9'
     },
     patientImage: { 
         width: 60, 
@@ -112,35 +133,13 @@ const styles = StyleSheet.create({
     patientDetails: { 
         fontSize: 14, 
         lineHeight: 20,
-        color: "#6B7280" 
+        color: "#6B7280",
+        marginBottom: 2,
     },
-    infoButton: { 
-        backgroundColor: "#E6F7FF", 
-        marginLeft: 5,
-        paddingHorizontal: 20, 
-        paddingVertical: 6, 
-        borderRadius: 20, 
-        borderWidth: 1, 
-        borderColor: "#5cc2f8" 
-    },
-    infoButtonText: { 
-        color: "#5cc2f8", 
-        fontWeight: "500" 
-    },
-    tabBar: {
-        flexDirection: "row",
-        height: 60,
-        borderTopWidth: 1,
-        borderTopColor: "#E5E7EB",
-        backgroundColor: "#fff"
-    },
-    tabItem: {
-        flex: 1,
-        justifyContent: "center",
-        alignItems: "center"
-    },
-    tabIcon: {
-        width: 24,
-        height: 24
+    noPatientsText: {
+        textAlign: 'center',
+        marginTop: 20,
+        fontSize: 16,
+        color: '#6B7280'
     }
 }); 

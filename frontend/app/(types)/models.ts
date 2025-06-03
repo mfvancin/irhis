@@ -300,3 +300,20 @@ export interface User {
     error?: string;
     status: number;
   }
+
+  export interface MovellaSensorData {
+    device_id: string;
+    timestamp: string; 
+    accelerometer: { x: number; y: number; z: number };
+    gyroscope: { x: number; y: number; z: number };
+    magnetometer?: { x: number; y: number; z: number };
+  }
+
+  export interface MovellaSimulationOutput {
+    device_id: string;
+    timestamp: string;
+    orientation: { x: number; y: number; z: number; w: number };
+    position: { x: number; y: number; z: number };
+    velocity: { x: number; y: number; z: number };
+    acceleration: { x: number; y: number; z: number };
+  }

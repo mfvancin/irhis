@@ -2,13 +2,13 @@ from pydantic import BaseModel, EmailStr, constr, validator, Field
 from typing import Optional, Annotated, List, Dict, Any
 from datetime import datetime
 import models
-from models import UserRole, RehabilitationStatus
+from models import UserRole, RehabilitationStatus, SensorDataType
 
 PasswordStr = Annotated[str, constr(min_length=8)]
 
 class SensorDataBase(BaseModel):
     sensor_id: str
-    data_type: models.SensorDataType
+    data_type: SensorDataType
     device_type: str
     device_id: str
     raw_data: Dict[str, Any]
@@ -183,17 +183,28 @@ class UserOut(BaseModel):
     class Config:
         from_attributes = True
 
+class PatientForDoctorList(BaseModel):
+    id: int
+    email: EmailStr
+    username: str
+    first_name: str
+    last_name: str
+
+    class Config:
+        from_attributes = True
+
 class DoctorPatientBase(BaseModel):
     doctor_id: int
-    patient_id: int
     status: str
 
 class DoctorPatientCreate(DoctorPatientBase):
+    patient_id: int
     pass
 
 class DoctorPatient(DoctorPatientBase):
     id: int
     assigned_date: datetime
+    patient: PatientForDoctorList
 
     class Config:
         from_attributes = True
