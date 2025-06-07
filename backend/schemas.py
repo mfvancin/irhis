@@ -129,18 +129,6 @@ class UserCreate(UserBase):
     rehabilitation_status: RehabilitationStatus = RehabilitationStatus.NOT_STARTED
     movella_dot_id: Optional[str] = None
 
-    @validator('specialization', 'license_number')
-    def validate_doctor_fields(cls, v, values):
-        if values.get('role') == UserRole.DOCTOR and not v:
-            raise ValueError('Specialization and license number are required for doctors')
-        return v
-
-    @validator('medical_history', 'current_condition', 'surgery_date', 'surgery_type')
-    def validate_patient_fields(cls, v, values):
-        if values.get('role') == UserRole.PATIENT and not v:
-            raise ValueError('Medical history, current condition, and surgery details are required for patients')
-        return v
-
 class User(UserBase):
     id: int
     is_active: bool

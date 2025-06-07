@@ -5,8 +5,6 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 import { API_URL } from "../constants";
 
-// Assuming UserRole enum/type is available or defined here
-// For simplicity, using string literals. In a real app, import from a types file.
 type UserRole = "patient" | "doctor";
 
 const Register = () => {
@@ -16,7 +14,7 @@ const Register = () => {
     const [username, setUsername] = useState("");
     const [fullName, setFullName] = useState("");
     const [password, setPassword] = useState("");
-    const [isLoading, setIsLoading] = useState(false);
+    const [loadingRole, setLoadingRole] = useState<UserRole | null>(null);
     
     const handleSignUp = async (role: UserRole) => {
         if (!email || !username || !fullName || !password) {
@@ -39,7 +37,7 @@ const Register = () => {
             return;
         }
     
-        setIsLoading(true);
+        setLoadingRole(role);
     
         try {
             const userData = {
@@ -90,7 +88,7 @@ const Register = () => {
                 Alert.alert("Registration Failed", "An unexpected error occurred. Please try again.");
             }
         } finally {
-            setIsLoading(false);
+            setLoadingRole(null);
         }
     };
     
@@ -166,9 +164,9 @@ const Register = () => {
           <TouchableOpacity 
             style={styles.signUpButton}
             onPress={() => handleSignUp("patient")}
-            disabled={isLoading}
+            disabled={!!loadingRole}
           >
-            {isLoading ? (
+            {loadingRole === 'patient' ? (
               <ActivityIndicator color="#fff" size="small" />
             ) : (
               <Text style={styles.signUpButtonText}>Register as Patient</Text>
@@ -178,9 +176,9 @@ const Register = () => {
           <TouchableOpacity 
             style={[styles.signUpButton, styles.doctorButton]}
             onPress={() => handleSignUp("doctor")}
-            disabled={isLoading}
+            disabled={!!loadingRole}
           >
-            {isLoading ? (
+            {loadingRole === 'doctor' ? (
               <ActivityIndicator color="#fff" size="small" />
             ) : (
               <Text style={styles.signUpButtonText}>Register as Doctor</Text>

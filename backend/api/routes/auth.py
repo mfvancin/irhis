@@ -73,26 +73,16 @@ def register_user(
     first_name = parts[0]
     last_name = parts[1] if len(parts) > 1 else ""
 
-    user_create_payload = schemas.UserCreate(
-        email=user_in.email,
-        username=user_in.username,
-        password=user_in.password,
-        first_name=first_name,
-        last_name=last_name,
-        role=user_in.role,
-        consent_given=False,
-        medical_history={}, 
-        current_condition="N/A",
-        surgery_date=None,
-        surgery_type="N/A",
-        rehabilitation_status=models.RehabilitationStatus.NOT_STARTED,
-        specialization=None,
-        license_number=None,
-        movella_dot_id=None,
-        phone_number=None,
-        date_of_birth=None
+    user_create_data = {
+        "email": user_in.email,
+        "username": user_in.username,
+        "password": user_in.password,
+        "first_name": first_name,
+        "last_name": last_name,
+        "role": user_in.role,
+    }
 
-    )
+    user_create_payload = schemas.UserCreate(**user_create_data)
 
     try:
         created_user = crud.create_user(db, user=user_create_payload)

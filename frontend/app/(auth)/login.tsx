@@ -10,15 +10,15 @@ const Login = () => {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+  const [loadingRole, setLoadingRole] = useState<string | null>(null);
 
-  const handleLogin = async () => {
+  const handleLogin = async (role: 'patient' | 'doctor') => {
     if (!email || !password) {
       Alert.alert("Error", "Please enter both email and password");
       return;
     }
 
-    setIsLoading(true);
+    setLoadingRole(role);
     try {
       console.log('Starting normal login process...');
       console.log('API URL:', `${API_URL}/token`);
@@ -73,6 +73,15 @@ const Login = () => {
       await AsyncStorage.setItem("userProfile", JSON.stringify(profileData));
       
       // Role-based navigation
+      if (profileData.role !== role) {
+        Alert.alert(
+          "Login Role Mismatch",
+          `You logged in as a ${role}, but your account is registered as a ${profileData.role}.`
+        );
+        router.replace("/(auth)/login"); // Or clear tokens and stay on page
+        return;
+      }
+
       if (profileData.role === 'doctor') {
         router.replace("/(tabs)/doctor-homepage");
       } else if (profileData.role === 'patient') {
@@ -92,7 +101,7 @@ const Login = () => {
         error instanceof Error ? error.message : "An unexpected error occurred"
       );
     } finally {
-      setIsLoading(false);
+      setLoadingRole(null);
     }
   };
 
@@ -146,8 +155,12 @@ const Login = () => {
         <Text style={styles.forgotPassword}>Forgot Password?</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity style={styles.loginButton} onPress={handleLogin} disabled={isLoading}>
-        {isLoading ? <ActivityIndicator color="#fff" size="small" /> : <Text style={styles.loginButtonText}>Login</Text>}
+      <TouchableOpacity style={styles.loginButton} onPress={() => handleLogin('patient')} disabled={!!loadingRole}>
+        {loadingRole === 'patient' ? <ActivityIndicator color="#fff" size="small" /> : <Text style={styles.loginButtonText}>Login as Patient</Text>}
+      </TouchableOpacity>
+
+      <TouchableOpacity style={[styles.loginButton, styles.doctorButton]} onPress={() => handleLogin('doctor')} disabled={!!loadingRole}>
+        {loadingRole === 'doctor' ? <ActivityIndicator color="#fff" size="small" /> : <Text style={styles.loginButtonText}>Login as Doctor</Text>}
       </TouchableOpacity>
 
       <View style={styles.registerContainer}>
@@ -224,7 +237,12 @@ const styles = StyleSheet.create({
     padding: 15,
     borderRadius: 16,
     alignItems: "center",
-    marginVertical: 20,
+    marginTop: 20,
+    marginBottom: 5,
+  },
+  doctorButton: {
+    backgroundColor: "#1E4D7B",
+    marginBottom: 20,
   },
   loginButtonText: {
     color: "#fff",

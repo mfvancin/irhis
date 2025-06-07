@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { StyleSheet, View, Text, Image, TouchableOpacity, ScrollView, StatusBar, ActivityIndicator, Alert } from "react-native";
 import { useRouter } from "expo-router";
 import Header from "../(components)/ScreenComponents/Header";
-import api from "../(services)/api"; 
+import api from "../(services)/api";    
 
 interface DoctorPatientListItem {
     id: number; 
@@ -27,11 +27,11 @@ export default function DoctorHomepage() {
             setIsLoading(true);
             try {
                 const response = await api.get<DoctorPatientListItem[]>("/doctor-patients/");
-                setAssignedPatients(response || []); // api.get returns data directly or throws
+                setAssignedPatients(response || []); 
             } catch (error) {
                 console.error("Error fetching assigned patients:", error);
                 Alert.alert("Error", "Could not fetch your patients.");
-                setAssignedPatients([]); // Clear patients on error
+                setAssignedPatients([]); 
             } finally {
                 setIsLoading(false);
             }
@@ -59,14 +59,13 @@ export default function DoctorHomepage() {
                 ) : (
                     assignedPatients.map((item) => (
                         <TouchableOpacity 
-                            key={item.patient.id} // Use patient user ID as key for the list item
+                            key={item.patient.id} 
                             style={styles.patientCard}
                             onPress={() => router.push({
-                                pathname: "/(tabs)/patient", // Navigate to the generic patient screen for now
-                                params: { id: item.patient.id.toString() } // Pass patient user ID
+                                pathname: "/(tabs)/patient", 
+                                params: { id: item.patient.id.toString() } 
                             })}
                         >
-                            {/* You might want a placeholder image or a generic one */}
                             <Image style={styles.patientImage} source={require("../../assets/images/user.png")} />
                             <View style={styles.patientInfo}>
                                 <Text style={styles.patientName}>{item.patient.first_name} {item.patient.last_name}</Text>

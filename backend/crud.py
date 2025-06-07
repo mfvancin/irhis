@@ -30,24 +30,11 @@ def get_users(db: Session, skip: int = 0, limit: int = 100):
 def create_user(db: Session, user: schemas.UserCreate):
     """Create a new user with role-specific validation."""
     hashed_password = get_password_hash(user.password)
-    db_user = models.User(
-        email=user.email,
-        username=user.username,
-        hashed_password=hashed_password,
-        role=user.role,
-        first_name=user.first_name,
-        last_name=user.last_name,
-        phone_number=user.phone_number,
-        date_of_birth=user.date_of_birth,
-        consent_given=user.consent_given,
-        consent_date=datetime.now() if user.consent_given else None,
-        specialization=user.specialization if user.role == models.UserRole.DOCTOR else None,
-        license_number=user.license_number if user.role == models.UserRole.DOCTOR else None,
-        medical_history=user.medical_history if user.role == models.UserRole.PATIENT else None,
-        current_condition=user.current_condition if user.role == models.UserRole.PATIENT else None,
-        surgery_date=user.surgery_date if user.role == models.UserRole.PATIENT else None,
-        surgery_type=user.surgery_type if user.role == models.UserRole.PATIENT else None
-    )
+    
+    # Exclude password from the user data dict and add hashed_password
+    user_data = user.model_dump(exclude={"password"})
+    db_user = models.User(**user_data, hashed_password=hashed_password)
+
     db.add(db_user)
     db.commit()
     db.refresh(db_user)

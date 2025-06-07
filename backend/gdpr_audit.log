@@ -3,3 +3,91 @@
 2025-06-03 11:30:23,036 - api.routes.auth - INFO - Registration attempt for email: mail@mail.com, username: usermail
 2025-06-03 11:31:41,970 - api.routes.auth - INFO - Registration attempt for email: mail@mail.com, username: usermail
 2025-06-03 11:33:08,949 - api.routes.auth - INFO - Registration attempt for email: mail@mail.com, username: usermail
+2025-06-07 10:10:34,166 - main - INFO - Method: GET Path: /doctor-patients/ Status: 401 Duration: 0.00s
+2025-06-07 10:11:19,997 - api.routes.auth - INFO - Registration attempt for email: mail@mail.com, username: usermail
+2025-06-07 10:12:31,446 - api.routes.auth - INFO - Registration attempt for email: mail@mail.com, username: usermail
+2025-06-07 10:12:31,462 - passlib.handlers.bcrypt - WARNING - (trapped) error reading bcrypt version
+Traceback (most recent call last):
+  File "/Users/manuelevancin/Desktop/EUC/IRHIS/irhis/backend/venv/lib/python3.13/site-packages/passlib/handlers/bcrypt.py", line 620, in _load_backend_mixin
+    version = _bcrypt.__about__.__version__
+              ^^^^^^^^^^^^^^^^^
+AttributeError: module 'bcrypt' has no attribute '__about__'
+2025-06-07 10:12:31,698 - api.routes.auth - ERROR - Error during user creation in DB: 'consent_date' is an invalid keyword argument for User
+2025-06-07 10:12:31,698 - main - INFO - Method: POST Path: /api/auth/register Status: 500 Duration: 0.26s
+2025-06-07 10:12:49,174 - api.routes.auth - INFO - Registration attempt for email: mail@mail.com, username: usermail
+2025-06-07 10:12:49,393 - api.routes.auth - ERROR - Error during user creation in DB: 'consent_date' is an invalid keyword argument for User
+2025-06-07 10:12:49,394 - main - INFO - Method: POST Path: /api/auth/register Status: 500 Duration: 0.22s
+2025-06-07 10:14:36,705 - api.routes.auth - INFO - Registration attempt for email: mail@mail.com, username: usermail
+2025-06-07 10:14:36,729 - passlib.handlers.bcrypt - WARNING - (trapped) error reading bcrypt version
+Traceback (most recent call last):
+  File "/Users/manuelevancin/Desktop/EUC/IRHIS/irhis/backend/venv/lib/python3.13/site-packages/passlib/handlers/bcrypt.py", line 620, in _load_backend_mixin
+    version = _bcrypt.__about__.__version__
+              ^^^^^^^^^^^^^^^^^
+AttributeError: module 'bcrypt' has no attribute '__about__'
+2025-06-07 10:14:36,982 - api.routes.auth - ERROR - Error during user creation in DB: 'consent_date' is an invalid keyword argument for User
+2025-06-07 10:14:36,983 - main - INFO - Method: POST Path: /api/auth/register Status: 500 Duration: 0.29s
+2025-06-07 10:14:41,681 - api.routes.auth - INFO - Registration attempt for email: mail@mail.com, username: usermail
+2025-06-07 10:14:41,897 - api.routes.auth - ERROR - Error during user creation in DB: 'consent_date' is an invalid keyword argument for User
+2025-06-07 10:14:41,898 - main - INFO - Method: POST Path: /api/auth/register Status: 500 Duration: 0.22s
+2025-06-07 10:17:21,037 - api.routes.auth - INFO - Registration attempt for email: mail@mail.com, username: usermail
+2025-06-07 10:17:21,053 - passlib.handlers.bcrypt - WARNING - (trapped) error reading bcrypt version
+Traceback (most recent call last):
+  File "/Users/manuelevancin/Desktop/EUC/IRHIS/irhis/backend/venv/lib/python3.13/site-packages/passlib/handlers/bcrypt.py", line 620, in _load_backend_mixin
+    version = _bcrypt.__about__.__version__
+              ^^^^^^^^^^^^^^^^^
+AttributeError: module 'bcrypt' has no attribute '__about__'
+2025-06-07 10:17:21,314 - api.routes.auth - INFO - Successfully created user: usermail with email mail@mail.com
+2025-06-07 10:17:21,315 - core.security - INFO - Creating access token for subject: mail@mail.com
+2025-06-07 10:17:21,325 - api.routes.auth - INFO - Generated access token for newly registered user: mail@mail.com
+2025-06-07 10:17:21,326 - main - INFO - Method: POST Path: /api/auth/register Status: 200 Duration: 0.29s
+2025-06-07 10:17:21,379 - api.deps - INFO - Decoding JWT token
+2025-06-07 10:17:21,379 - api.deps - INFO - Looking up user with email: mail@mail.com
+2025-06-07 10:17:21,380 - api.routes.users - INFO - Fetching profile for user: mail@mail.com
+2025-06-07 10:17:21,381 - main - INFO - Method: GET Path: /api/users/me Status: 200 Duration: 0.00s
+2025-06-07 10:17:21,487 - main - INFO - Method: GET Path: /users/me Status: 200 Duration: 0.00s
+2025-06-07 10:17:21,494 - main - INFO - Method: GET Path: /users/me Status: 200 Duration: 0.00s
+2025-06-07 10:17:26,825 - main - INFO - Method: GET Path: /users/me Status: 200 Duration: 0.00s
+2025-06-07 10:17:31,582 - main - INFO - Method: GET Path: /users/me Status: 200 Duration: 0.00s
+2025-06-07 10:17:34,770 - main - INFO - Method: GET Path: /users/me Status: 200 Duration: 0.01s
+2025-06-07 10:17:34,781 - main - INFO - Method: GET Path: /users/me Status: 200 Duration: 0.00s
+2025-06-07 10:17:36,320 - main - INFO - Method: GET Path: /users/me Status: 200 Duration: 0.01s
+2025-06-07 10:17:36,321 - main - INFO - Method: GET Path: /users/me Status: 200 Duration: 0.01s
+2025-06-07 10:17:42,526 - main - INFO - Method: GET Path: /users/me Status: 200 Duration: 0.00s
+2025-06-07 10:17:42,527 - main - INFO - Method: GET Path: /users/me Status: 200 Duration: 0.00s
+2025-06-07 10:17:42,607 - main - INFO - Method: GET Path: /users/me Status: 200 Duration: 0.00s
+2025-06-07 10:17:42,607 - main - INFO - Method: GET Path: /users/me Status: 200 Duration: 0.00s
+2025-06-07 10:17:42,617 - main - INFO - Method: GET Path: /users/me Status: 200 Duration: 0.00s
+2025-06-07 10:17:50,969 - main - INFO - Method: GET Path: /users/me Status: 200 Duration: 0.01s
+2025-06-07 10:17:50,970 - main - INFO - Method: GET Path: /users/me Status: 200 Duration: 0.01s
+2025-06-07 10:17:52,041 - main - INFO - Method: GET Path: /users/me Status: 200 Duration: 0.00s
+2025-06-07 10:17:52,041 - main - INFO - Method: GET Path: /users/me Status: 200 Duration: 0.00s
+2025-06-07 10:19:15,410 - api.routes.auth - INFO - Registration attempt for email: doc@mail.com, username: docmail
+2025-06-07 10:19:15,656 - api.routes.auth - INFO - Successfully created user: docmail with email doc@mail.com
+2025-06-07 10:19:15,656 - core.security - INFO - Creating access token for subject: doc@mail.com
+2025-06-07 10:19:15,656 - api.routes.auth - INFO - Generated access token for newly registered user: doc@mail.com
+2025-06-07 10:19:15,657 - main - INFO - Method: POST Path: /api/auth/register Status: 200 Duration: 0.25s
+2025-06-07 10:19:15,765 - api.deps - INFO - Decoding JWT token
+2025-06-07 10:19:15,765 - api.deps - INFO - Looking up user with email: doc@mail.com
+2025-06-07 10:19:15,766 - api.routes.users - INFO - Fetching profile for user: doc@mail.com
+2025-06-07 10:19:15,767 - main - INFO - Method: GET Path: /api/users/me Status: 200 Duration: 0.00s
+2025-06-07 10:19:15,863 - main - INFO - Method: GET Path: /users/me Status: 200 Duration: 0.00s
+2025-06-07 10:19:15,876 - main - INFO - Method: GET Path: /doctor-patients/ Status: 200 Duration: 0.01s
+2025-06-07 10:19:15,911 - main - INFO - Method: GET Path: /users/me Status: 200 Duration: 0.00s
+2025-06-07 10:19:23,188 - main - INFO - Method: GET Path: /users/me Status: 200 Duration: 0.00s
+2025-06-07 10:19:23,189 - main - INFO - Method: GET Path: /users/me Status: 200 Duration: 0.00s
+2025-06-07 10:19:23,278 - main - INFO - Method: GET Path: /users/me Status: 200 Duration: 0.00s
+2025-06-07 10:19:23,278 - main - INFO - Method: GET Path: /users/me Status: 200 Duration: 0.00s
+2025-06-07 10:19:23,287 - main - INFO - Method: GET Path: /users/me Status: 200 Duration: 0.00s
+2025-06-07 10:22:39,941 - main - INFO - Method: POST Path: /token Status: 401 Duration: 0.01s
+2025-06-07 10:31:07,895 - passlib.handlers.bcrypt - WARNING - (trapped) error reading bcrypt version
+Traceback (most recent call last):
+  File "/Users/manuelevancin/Desktop/EUC/IRHIS/irhis/backend/venv/lib/python3.13/site-packages/passlib/handlers/bcrypt.py", line 620, in _load_backend_mixin
+    version = _bcrypt.__about__.__version__
+              ^^^^^^^^^^^^^^^^^
+AttributeError: module 'bcrypt' has no attribute '__about__'
+2025-06-07 10:31:08,172 - core.security - INFO - Creating access token for subject: doc@mail.com
+2025-06-07 10:31:08,178 - main - INFO - Method: POST Path: /token Status: 200 Duration: 0.31s
+2025-06-07 10:31:08,230 - main - INFO - Method: GET Path: /users/me Status: 200 Duration: 0.01s
+2025-06-07 10:31:08,334 - main - INFO - Method: GET Path: /users/me Status: 200 Duration: 0.00s
+2025-06-07 10:31:08,362 - main - INFO - Method: GET Path: /doctor-patients/ Status: 200 Duration: 0.01s
+2025-06-07 10:31:08,396 - main - INFO - Method: GET Path: /users/me Status: 200 Duration: 0.00s
