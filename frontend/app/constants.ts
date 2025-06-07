@@ -6,11 +6,11 @@ const getBaseUrl = () => {
   // TODO: Consider making this configurable, e.g., via environment variables
   if (__DEV__) {
     // For development, use the local network IP of your backend server
-    // Replace '192.168.0.43' with your actual backend server IP if it changes
+    // This should be your local machine's IP where the backend is running
     return 'http://192.168.1.190:8000';
   }
-  // For production, you'll likely have a different URL
-  return 'http://192.168.1.190:8000'; // Or your production API URL
+  // For production, use the deployed Azure App Service URL
+  return 'https://irhis-app.azurewebsites.net';
 };
 
 export const API_URL = getBaseUrl();
