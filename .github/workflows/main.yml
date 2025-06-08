@@ -23,6 +23,9 @@ jobs:
         pip install --upgrade pip
         pip install -r requirements.txt
     
+    - name: 'Install zip utility'
+      run: apt-get update && apt-get install -y zip
+
     - name: 'Zip artifact for deployment'
       working-directory: ./backend
       run: zip -r ../release.zip . -x "antenv/*"
