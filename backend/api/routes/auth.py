@@ -83,7 +83,7 @@ def register_user(
     }
 
     user_create_payload = schemas.UserCreate(**user_create_data)
-
+    
     try:
         created_user = crud.create_user(db, user=user_create_payload)
         logger.info(f"Successfully created user: {created_user.username} with email {created_user.email}")
