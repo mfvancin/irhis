@@ -52,7 +52,7 @@ def register_user(
     user_in: schemas.UserRegisterSimple,
 ) -> Any:
     logger.info(f"Registration attempt for email: {user_in.email}, username: {user_in.username}")
-    
+
     existing_user_email = crud.get_user_by_email(db, email=user_in.email)
     if existing_user_email:
         logger.warning(f"Registration failed: Email %s already exists.", user_in.email)
@@ -60,7 +60,7 @@ def register_user(
             status_code=400,
             detail="The user with this email already exists in the system.",
         )
-    
+
     existing_user_username = crud.get_user_by_username(db, username=user_in.username)
     if existing_user_username:
         logger.warning(f"Registration failed: Username %s already exists.", user_in.username)
@@ -83,7 +83,7 @@ def register_user(
     }
 
     user_create_payload = schemas.UserCreate(**user_create_data)
-    
+
     try:
         created_user = crud.create_user(db, user=user_create_payload)
         logger.info(f"Successfully created user: {created_user.username} with email {created_user.email}")
@@ -116,7 +116,7 @@ def forgot_password(
     reset_token = security.create_access_token(
         subject=user.email,
         expires_delta=timedelta(minutes=30)
-    )    
+    )
     reset_url = f"{settings.ALLOWED_ORIGINS[0]}/reset-password?token={reset_token}"
 
     background_tasks.add_task(send_reset_email, email=user.email, reset_link=reset_url)
