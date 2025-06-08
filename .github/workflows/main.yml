@@ -7,21 +7,21 @@ on:
 
 jobs:
   build-and-deploy:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     
-    container: mcr.microsoft.com/appsvc/python:3.11
-
     steps:
     - name: 'Checkout Github Action'
       uses: actions/checkout@v4
 
-    - name: Install zip utility
-      run: apt-get update && apt-get install -y zip
+    - name: 'Set up Python 3.11'
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
 
     - name: 'Create and start virtual environment & Install dependencies'
       working-directory: ./backend
       run: |
-        python3 -m venv antenv
+        python -m venv antenv
         source antenv/bin/activate
         pip install --upgrade pip
         pip install -r requirements.txt
