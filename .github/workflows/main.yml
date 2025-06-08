@@ -7,7 +7,9 @@ on:
 
 jobs:
   build-and-deploy:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
+    container:
+      image: python:3.11
     
     steps:
     - name: 'Checkout Github Action'
@@ -28,7 +30,7 @@ jobs:
     
     - name: 'Zip artifact for deployment'
       working-directory: ./backend
-      run: zip -r ../release.zip .
+      run: zip -r ../release.zip . -x "antenv/*"
       
     - name: 'Deploy to Azure Web App'
       uses: azure/webapps-deploy@v2
