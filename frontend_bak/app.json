@@ -1,0 +1,46 @@
+{
+  "expo": {
+    "name": "irhis",
+    "slug": "frontend",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "irhis",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "splash": {
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.mfvancin.irhis",
+      "buildNumber": "3",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    },
+    "android": {
+      "edgeToEdgeEnabled": true
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-font"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "2b0b0329-c978-40a6-b2ce-bf33ad88f342"
+      }
+    },
+    "owner": "mfvancin"
+  }
+}

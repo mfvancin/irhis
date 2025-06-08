@@ -55,7 +55,7 @@ def register_user(
     
     existing_user_email = crud.get_user_by_email(db, email=user_in.email)
     if existing_user_email:
-        logger.warning(f"Registration failed: Email {user_in.email} already exists.")
+        logger.warning(f"Registration failed: Email %s already exists.", user_in.email)
         raise HTTPException(
             status_code=400,
             detail="The user with this email already exists in the system.",
@@ -63,7 +63,7 @@ def register_user(
     
     existing_user_username = crud.get_user_by_username(db, username=user_in.username)
     if existing_user_username:
-        logger.warning(f"Registration failed: Username {user_in.username} already exists.")
+        logger.warning(f"Registration failed: Username %s already exists.", user_in.username)
         raise HTTPException(
             status_code=400,
             detail="The user with this username already exists in the system.",

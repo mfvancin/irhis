@@ -1,0 +1,4 @@
+export const config = {
+    GOOGLE_CLIENT_ID_IOS: "YOUR_IOS_CLIENT_ID",
+    GOOGLE_CLIENT_ID_ANDROID: "YOUR_ANDROID_CLIENT_ID",
+  }; 

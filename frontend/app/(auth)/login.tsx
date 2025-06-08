@@ -40,7 +40,11 @@ const Login = () => {
       });
 
       console.log('Response status:', response.status);
-      console.log('Response headers:', JSON.stringify(Object.fromEntries(response.headers.entries())));
+      const headers: { [key: string]: string } = {};
+      response.headers.forEach((value: string, key: string) => {
+        headers[key] = value;
+      });
+      console.log('Response headers:', JSON.stringify(headers));
       
       const data = await response.json();
       console.log('Response data:', data);
@@ -111,7 +115,7 @@ const Login = () => {
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity onPress={() => router.push("../landing")} style={styles.backButton}>
+      <TouchableOpacity onPress={() => router.push("/(auth)/landing")} style={styles.backButton}>
         <Image source={require("../../assets/images/back.png")} style={styles.backIcon} />
       </TouchableOpacity>
 

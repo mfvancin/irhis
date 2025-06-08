@@ -1,0 +1,15 @@
+{
+  "expo": {
+    "extra": {
+      "eas": {
+        "projectId": "d4ff162b-683e-4fc6-a2e7-d194ba5709f5"
+      }
+    },
+    "ios": {
+      "bundleIdentifier": "com.mfvancin.irhis",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    }
+  }
+}
