@@ -19,7 +19,7 @@ jobs:
       working-directory: ./backend
       run: |
         python -m venv antenv
-        source antenv/bin/activate
+        . antenv/bin/activate
         pip install --upgrade pip
         pip install -r requirements.txt
     
