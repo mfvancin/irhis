@@ -28,7 +28,7 @@ jobs:
 
     - name: 'Zip artifact for deployment'
       working-directory: ./backend
-      run: zip -r ../release.zip . -x "antenv/*"
+      run: zip -r ../release.zip .
       
     - name: 'Deploy to Azure Web App'
       uses: azure/webapps-deploy@v2
