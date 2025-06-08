@@ -8,18 +8,31 @@ on:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+    
     steps:
-    - uses: actions/checkout@v4
+    - name: 'Checkout Github Action'
+      uses: actions/checkout@v4
 
-    - name: Set up Python 3.11
+    - name: 'Set up Python 3.11'
       uses: actions/setup-python@v4
       with:
         python-version: '3.11'
+
+    - name: 'Create and start virtual environment & Install dependencies'
+      working-directory: ./backend
+      run: |
+        python -m venv antenv
+        source antenv/bin/activate
+        pip install --upgrade pip
+        pip install -r requirements.txt
     
+    - name: 'Zip artifact for deployment'
+      working-directory: ./backend
+      run: zip -r ../release.zip .
+      
     - name: 'Deploy to Azure Web App'
       uses: azure/webapps-deploy@v2
       with:
         app-name: 'irhis-app'
         publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
-        package: 'backend'
-        scm-do-build-during-deployment: true 
+        package: 'release.zip' 
