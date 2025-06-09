@@ -7,7 +7,7 @@ from database import Base, engine, SessionLocal
 import models
 import schemas
 from core.security import get_current_user
-from api.routes import auth
+from api.routes.auth import router as auth_router
 
 Base.metadata.create_all(bind=engine)
 
@@ -40,7 +40,7 @@ def read_root():
 def read_users_me(current_user: models.User = Depends(get_current_user)):
     return current_user
 
-app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
+app.include_router(auth_router)
 
 if __name__ == "__main__":
     uvicorn.run(
