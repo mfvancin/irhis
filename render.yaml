@@ -17,8 +17,8 @@ services:
         generateValue: true
       - key: WEB_CONCURRENCY
         value: 4
-
-databases:
-  - name: irhis-db
-    databaseName: irhis
-    plan: free 
+  - type: psql
+    name: irhis-db
+    region: frankfurt
+    plan: free
+    version: "15" 

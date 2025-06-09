@@ -9,3 +9,5 @@ psycopg2-binary
 asyncpg
 email-validator
 pydantic
+pydantic-settings
+python-multipart
