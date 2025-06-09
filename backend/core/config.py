@@ -2,6 +2,7 @@ from pydantic_settings import BaseSettings
 from typing import List, Optional
 import secrets
 import os
+from pydantic import validator
 
 class Settings(BaseSettings):
     PROJECT_NAME: str = "IRHIS API"
@@ -20,10 +21,10 @@ class Settings(BaseSettings):
     DIGITAL_TWIN_POSTGRES_DB: str = "digital_twin"
     DIGITAL_TWIN_POSTGRES_PORT: str = "5433"
     
-    DATABASE_URL: Optional[str] = None
+    DATABASE_URL: str = os.getenv("DATABASE_URL")
     DIGITAL_TWIN_DATABASE_URL: Optional[str] = None
     
-    SECRET_KEY: str = "your-secret-key-here"  # Change this in prod
+    SECRET_KEY: str = os.getenv("SECRET_KEY")
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     
@@ -31,7 +32,7 @@ class Settings(BaseSettings):
     ALLOWED_HOSTS: List[str] = ["*"]
     HOST: str = "0.0.0.0"
     PORT: int = 8000
-    DEBUG_MODE: bool = True
+    DEBUG_MODE: bool = os.getenv("DEBUG_MODE", "False").lower() in ("true", "1", "t")
     DATA_RETENTION_DAYS: int = 365 * 2 
     ENCRYPTION_KEY: str = secrets.token_urlsafe(32)
     SMTP_TLS: bool = True
@@ -76,6 +77,12 @@ class Settings(BaseSettings):
         if self.DIGITAL_TWIN_DATABASE_URL:
             return self.DIGITAL_TWIN_DATABASE_URL
         return f"postgresql://{self.DIGITAL_TWIN_POSTGRES_USER}:{self.DIGITAL_TWIN_POSTGRES_PASSWORD}@{self.DIGITAL_TWIN_POSTGRES_SERVER}:{self.DIGITAL_TWIN_POSTGRES_PORT}/{self.DIGITAL_TWIN_POSTGRES_DB}"
+
+    @validator("DATABASE_URL", pre=True)
+    def fix_database_url(cls, v):
+        if v and v.startswith("postgres://"):
+            return v.replace("postgres://", "postgresql://", 1)
+        return v
 
     class Config:
         env_file = ".env"

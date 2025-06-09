@@ -11,7 +11,7 @@ import logging
 from datetime import datetime
 import crud, models, schemas
 from core.security import create_access_token, get_current_user
-from api.routes import auth, users, exercises, digital_twin
+from api.routes import auth, users, exercises
 
 logging.basicConfig(
     level=logging.INFO,
@@ -292,7 +292,6 @@ def get_user_dashboard(
 app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
 app.include_router(users.router, prefix="/api/users", tags=["users"])
 app.include_router(exercises.router, prefix="/api/exercises", tags=["exercises"])
-app.include_router(digital_twin.router, prefix="/api/digital-twin", tags=["digital-twin"])
 
 if __name__ == "__main__":
     uvicorn.run(
