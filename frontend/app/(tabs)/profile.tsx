@@ -1,207 +1,134 @@
-import * as React from "react";
-import { StyleSheet, View, Image, Text, TouchableOpacity, StatusBar, TextInput, SafeAreaView, ActivityIndicator, Alert } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
+import React, { useEffect, useState } from "react";
+import { StyleSheet, View, Text, TouchableOpacity, StatusBar, SafeAreaView, ActivityIndicator, Alert } from "react-native";
 import { useRouter } from "expo-router";
-import userService from "../(services)/userService";
-import { useEffect, useState } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { API_URL } from "../constants";
+import axios from "axios";
 
 const Profile = () => {
-  const router = useRouter();
-  const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState({
-    name: "",
-    phone: "",
-    email: ""
-  });
+    const router = useRouter();
+    const [user, setUser] = useState<{ username: string; email: string } | null>(null);
+    const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    loadUserProfile();
-  }, []);
+    useEffect(() => {
+        const fetchUserProfile = async () => {
+            try {
+                const token = await AsyncStorage.getItem("access_token");
+                if (!token) {
+                    router.replace("/(auth)/login");
+                    return;
+                }
+                const response = await axios.get(`${API_URL}/users/me`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                setUser(response.data);
+            } catch (error) {
+                Alert.alert("Error", "Failed to load profile data.");
+                console.error("Error loading profile:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
 
-  const loadUserProfile = async () => {
-    try {
-      const user = await userService.getUserProfile();
-      setFormData({
-        name: user.username || "",
-        phone: user.emergencyContact?.phone || "",
-        email: user.email || ""
-      });
-    } catch (error) {
-      console.error("Error loading profile:", error);
-      Alert.alert("Error", "Failed to load profile data");
-    }
-  };
+        fetchUserProfile();
+    }, []);
 
-  const handleUpdateProfile = async () => {
-    try {
-      setLoading(true);
-      await userService.updateUserProfile({
-        username: formData.name,
-        email: formData.email,
-        emergencyContact: {
-          name: formData.name,
-          relationship: "self",
-          phone: formData.phone
-        }
-      });
-      Alert.alert("Success", "Profile updated successfully");
-    } catch (error) {
-      console.error("Error updating profile:", error);
-      Alert.alert("Error", "Failed to update profile");
-    } finally {
-      setLoading(false);
-    }
-  };
+    const handleLogout = async () => {
+        await AsyncStorage.clear();
+        router.replace("/(auth)/login");
+    };
 
-  return (
-    <View style={styles.profile}>
-      <StatusBar barStyle="light-content" />
-      
-      <LinearGradient
-        style={styles.header}
-        locations={[0, 1]}
-        colors={['#5cc2f8', '#4da1ce']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 0, y: 1 }}
-      >
-        <SafeAreaView style={styles.headerContent}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-            <Image source={require("../../assets/images/back.png")} style={styles.backIcon} />
-          </TouchableOpacity>
-          <Text style={styles.settings}>Settings</Text>
-        </SafeAreaView>
-      </LinearGradient>
+    return (
+        <View style={styles.container}>
+            <StatusBar barStyle="dark-content" />
+            <SafeAreaView style={{ flex: 1 }}>
+                <View style={styles.header}>
+                    <Text style={styles.headerTitle}>Profile</Text>
+                </View>
 
-      <View style={styles.formContainer}>
-        <Text style={styles.fieldLabel}>Name</Text>
-        <View style={styles.inputField}>
-          <TextInput
-            style={styles.inputText}
-            placeholder="Jane Doe"
-            placeholderTextColor="#c8c8c8"
-            autoCapitalize="words"
-            value={formData.name}
-            onChangeText={(text) => setFormData(prev => ({ ...prev, name: text }))}
-          />
+                {loading ? (
+                    <ActivityIndicator size="large" color="#2a5b7e" />
+                ) : user ? (
+                    <View style={styles.content}>
+                        <View style={styles.infoBox}>
+                            <Text style={styles.label}>Username</Text>
+                            <Text style={styles.value}>{user.username}</Text>
+                        </View>
+                        <View style={styles.infoBox}>
+                            <Text style={styles.label}>Email</Text>
+                            <Text style={styles.value}>{user.email}</Text>
+                        </View>
+                        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+                            <Text style={styles.logoutButtonText}>Logout</Text>
+                        </TouchableOpacity>
+                    </View>
+                ) : (
+                    <Text style={styles.errorText}>Could not load profile.</Text>
+                )}
+            </SafeAreaView>
         </View>
-
-        <Text style={styles.fieldLabel}>Phone Number</Text>
-        <View style={styles.inputField}>
-          <TextInput
-            style={styles.inputText}
-            placeholder="+123 567 89000"
-            placeholderTextColor="#c8c8c8"
-            keyboardType="phone-pad"
-            autoCapitalize="none"
-            value={formData.phone}
-            onChangeText={(text) => setFormData(prev => ({ ...prev, phone: text }))}
-          />
-        </View>
-
-        <Text style={styles.fieldLabel}>Email</Text>
-        <View style={styles.inputField}>
-          <TextInput
-            style={styles.inputText}
-            placeholder="janedoe@example.com"
-            placeholderTextColor="#c8c8c8"
-            keyboardType="email-address"
-            autoCapitalize="none"
-            value={formData.email}
-            onChangeText={(text) => setFormData(prev => ({ ...prev, email: text }))}
-          />
-        </View>
-      </View>
-
-      <TouchableOpacity
-        style={[styles.updateProfileButton, loading && styles.updateProfileButtonDisabled]}
-        onPress={handleUpdateProfile}
-        disabled={loading}
-      >
-        {loading ? (
-          <ActivityIndicator color="#fff" />
-        ) : (
-          <Text style={styles.updateProfileText}>Update Profile</Text>
-        )}
-      </TouchableOpacity>
-    </View>
-  );
+    );
 };
 
 const styles = StyleSheet.create({
-  profile: {
-    flex: 1,
-    backgroundColor: "#fff",
-  },
-  header: {
-    width: "100%",
-    paddingBottom: 35,
-  },
-  headerContent: {
-    width: "100%",
-    alignItems: "center",
-    paddingTop: 10, 
-  },
-  backButton: {
-    position: "absolute",
-    top: 50,
-    left: 5,
-    padding: 10,
-  },
-  backIcon: {
-    width: 30,
-    height: 30,
-  },
-  settings: {
-    fontSize: 32,
-    fontWeight: "600",
-    color: "#fff",
-    textAlign: "center",
-    textTransform: "capitalize",
-    marginTop: 25, 
-  },
-  formContainer: {
-    marginTop: 50,
-    paddingHorizontal: 25,
-  },
-  fieldLabel: {
-    fontSize: 16,
-    fontWeight: "400",
-    color: "#000",
-    marginLeft: 10,
-    marginBottom: 5,
-    textTransform: "capitalize",
-  },
-  inputField: {
-    height: 55,
-    borderWidth: 1,
-    borderColor: "#5cc2f8",
-    borderRadius: 13,
-    paddingHorizontal: 15,
-    justifyContent: "center",
-    marginBottom: 20,
-  },
-  inputText: {
-    fontSize: 16,
-    color: "#0d1d25",
-  },
-  updateProfileButton: {
-    backgroundColor: "#4da1ce",
-    borderRadius: 16,
-    paddingVertical: 16,
-    marginHorizontal: 25,
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: 25,
-  },
-  updateProfileButtonDisabled: {
-    opacity: 0.7,
-  },
-  updateProfileText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "700",
-    textAlign: "center",
-  },
+    container: {
+        flex: 1,
+        backgroundColor: "#f0f2f5",
+    },
+    header: {
+        backgroundColor: "#fff",
+        padding: 20,
+        borderBottomWidth: 1,
+        borderBottomColor: '#e0e0e0',
+        alignItems: 'center'
+    },
+    headerTitle: {
+        fontSize: 22,
+        fontWeight: "bold",
+        color: "#2a5b7e",
+    },
+    content: {
+        flex: 1,
+        padding: 20,
+    },
+    infoBox: {
+        backgroundColor: '#fff',
+        padding: 15,
+        borderRadius: 10,
+        marginBottom: 15,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.1,
+        shadowRadius: 2,
+        elevation: 2,
+    },
+    label: {
+        fontSize: 14,
+        color: '#6B7280',
+    },
+    value: {
+        fontSize: 18,
+        color: '#2a5b7e',
+        marginTop: 5,
+    },
+    logoutButton: {
+        backgroundColor: '#d9534f',
+        paddingVertical: 15,
+        borderRadius: 10,
+        alignItems: 'center',
+        marginTop: 20,
+    },
+    logoutButtonText: {
+        color: '#fff',
+        fontSize: 16,
+        fontWeight: 'bold'
+    },
+    errorText: {
+        textAlign: 'center',
+        marginTop: 50,
+        fontSize: 16,
+        color: 'red'
+    }
 });
 
 export default Profile;

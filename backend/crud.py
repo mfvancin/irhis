@@ -28,10 +28,8 @@ def get_users(db: Session, skip: int = 0, limit: int = 100):
     return db.query(models.User).offset(skip).limit(limit).all()
 
 def create_user(db: Session, user: schemas.UserCreate):
-    """Create a new user with role-specific validation."""
+    """Create a new user."""
     hashed_password = get_password_hash(user.password)
-    
-    # Exclude password from the user data dict and add hashed_password
     user_data = user.model_dump(exclude={"password"})
     db_user = models.User(**user_data, hashed_password=hashed_password)
 
@@ -172,9 +170,6 @@ def authenticate_user(db: Session, identifier: str, password: str):
         user = get_user_by_username(db, identifier)
     if not user or not verify_password(password, user.hashed_password):
         return None
-    
-    user.last_login = datetime.utcnow()
-    db.commit()
     return user
 
 def update_user_password(db: Session, user: models.User, new_password: str):

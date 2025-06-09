@@ -1,11 +1,10 @@
 import logging
 from datetime import timedelta
 from typing import Any
-from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
+from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 import schemas, crud, models
-from services.email import send_reset_email
 from core import security
 from core.config import settings
 from database import get_db
@@ -101,47 +100,3 @@ def register_user(
         "access_token": access_token,
         "token_type": "bearer"
     }
-
-@router.post("/forgot-password")
-def forgot_password(
-    *,
-    background_tasks: BackgroundTasks,
-    db: Session = Depends(get_db),
-    request: schemas.ForgotPasswordRequest
-) -> Any:
-    user = crud.get_user_by_email(db, email=request.email)
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-
-    reset_token = security.create_access_token(
-        subject=user.email,
-        expires_delta=timedelta(minutes=30)
-    )
-    reset_url = f"{settings.ALLOWED_ORIGINS[0]}/reset-password?token={reset_token}"
-
-    background_tasks.add_task(send_reset_email, email=user.email, reset_link=reset_url)
-    logger.info(f"Password reset email sent to {user.email}")
-    return {"message": "If an account with this email exists, a password reset link has been sent."}
-
-@router.post("/reset-password")
-def reset_password(
-    *,
-    db: Session = Depends(get_db),
-    request: schemas.ResetPasswordRequest
-) -> Any:
-    try:
-        payload = security.decode_access_token(request.token)
-        email = payload.get("sub")
-        if not email:
-            raise HTTPException(status_code=400, detail="Invalid or expired token")
-
-        user = crud.get_user_by_email(db, email=email)
-        if not user:
-            raise HTTPException(status_code=404, detail="User not found or token invalid")
-
-        crud.update_user_password(db, user=user, new_password=request.new_password)
-        logger.info(f"Password successfully reset for user {email}")
-        return {"message": "Password reset successful. You can now login with your new password."}
-    except Exception as e:
-        logger.error(f"Unexpected error during password reset: {str(e)}")
-        raise HTTPException(status_code=500, detail="An unexpected error occurred.")

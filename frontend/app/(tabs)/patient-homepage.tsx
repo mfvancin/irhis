@@ -1,39 +1,26 @@
-import * as React from "react";
-import { StyleSheet, View, Text, ScrollView, StatusBar, TouchableOpacity } from "react-native";
-import { router } from "expo-router";
-import Header from "../(components)/ScreenComponents/Header";
+import React from "react";
+import { StyleSheet, View, Text, TouchableOpacity, StatusBar } from "react-native";
+import { useRouter } from "expo-router";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
-export default function PatientHomepage() { // Renamed component
+export default function PatientHomepage() {
+    const router = useRouter();
 
-    // Placeholder data for assigned plan - replace with actual data fetching
-    const assignedPlan = [
-        { id: "1", name: "Knee Bends", description: "3 sets of 12 repetitions", scheduled: "Today, 10:00 AM" },
-        { id: "2", name: "Leg Raises", description: "3 sets of 15 repetitions", scheduled: "Today, 02:00 PM" },
-        { id: "3", name: "Ankle Pumps", description: "4 sets of 20 repetitions", scheduled: "Tomorrow, 09:00 AM" },
-    ];
+    const handleLogout = async () => {
+        await AsyncStorage.clear();
+        router.replace("/(auth)/login");
+    };
 
     return (
         <View style={styles.container}>
             <StatusBar barStyle="dark-content" />
-            <Header />
-            <ScrollView style={styles.contentContainer}>
-                <Text style={styles.sectionTitle}>Your Rehabilitation Plan</Text>
-                {assignedPlan.map((item) => (
-                    <View key={item.id} style={styles.planItemCard}>
-                        <Text style={styles.planItemName}>{item.name}</Text>
-                        <Text style={styles.planItemDescription}>{item.description}</Text>
-                        <Text style={styles.planItemScheduled}>Scheduled: {item.scheduled}</Text>
-                    </View>
-                ))}
-
-                <TouchableOpacity 
-                    style={styles.smartwatchButton}
-                    onPress={() => router.push("/(tabs)/digital-twin")} // Or specific Movella connection screen
-                >
-                    <Text style={styles.smartwatchButtonText}>Connect Smartwatch / View Sensor Data</Text>
+            <View style={styles.content}>
+                <Text style={styles.title}>Patient Homepage</Text>
+                <Text style={styles.subtitle}>Welcome, Patient!</Text>
+                <TouchableOpacity style={styles.button} onPress={handleLogout}>
+                    <Text style={styles.buttonText}>Logout</Text>
                 </TouchableOpacity>
-
-            </ScrollView>
+            </View>
         </View>
     );
 }
@@ -41,52 +28,34 @@ export default function PatientHomepage() { // Renamed component
 const styles = StyleSheet.create({
     container: { 
         flex: 1, 
-        backgroundColor: "#fff" 
+        backgroundColor: "#fff",
+        justifyContent: 'center',
+        alignItems: 'center'
     },
-    contentContainer: { 
-        flex: 1, 
-        paddingHorizontal: 15 
+    content: {
+        padding: 20,
+        alignItems: 'center'
     },
-    sectionTitle: { 
+    title: { 
         fontSize: 24, 
         fontWeight: "bold", 
         color: "#2a5b7e", 
-        marginVertical: 15 
+        marginBottom: 10
     },
-    planItemCard: { 
-        padding: 15, 
-        borderWidth: 1, 
-        borderColor: "#E5E7EB", 
-        borderRadius: 15, 
-        marginBottom: 10, 
-        backgroundColor: '#f9f9f9'
+    subtitle: {
+        fontSize: 18,
+        color: '#6B7280',
+        marginBottom: 30,
     },
-    planItemName: { 
-        fontSize: 18, 
-        fontWeight: "600", 
-        color: "#2a5b7e", 
-        marginBottom: 5 
+    button: {
+        backgroundColor: '#d9534f',
+        paddingVertical: 10,
+        paddingHorizontal: 20,
+        borderRadius: 5,
     },
-    planItemDescription: { 
-        fontSize: 14, 
-        color: "#6B7280", 
-        marginBottom: 5 
-    },
-    planItemScheduled: { 
-        fontSize: 12, 
-        color: "#888" 
-    },
-    smartwatchButton: {
-        backgroundColor: "#4CAF50", // A distinct color for this button
-        padding: 15,
-        borderRadius: 10,
-        alignItems: "center",
-        marginTop: 20,
-        marginBottom: 20,
-    },
-    smartwatchButtonText: {
-        color: "#fff",
+    buttonText: {
+        color: '#fff',
         fontSize: 16,
-        fontWeight: "bold",
-    },
+        fontWeight: 'bold'
+    }
 }); 
