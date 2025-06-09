@@ -32,7 +32,7 @@ class Settings(BaseSettings):
             
             if all([db_user, db_password, db_host, db_port, db_name]):
                 v['DATABASE_URL'] = (
-                    f"postgresql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}"
+                    f"postgresql+psycopg2://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}"
                 )
         return v
     

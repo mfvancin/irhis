@@ -9,8 +9,6 @@ import schemas
 from core.security import get_current_user
 from api.routes.auth import router as auth_router
 
-Base.metadata.create_all(bind=engine)
-
 app = FastAPI(
     title="IRHIS API",
     description="Simplified IRHIS API for user authentication.",
