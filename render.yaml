@@ -9,10 +9,28 @@ services:
     startCommand: "gunicorn -w 4 -k uvicorn.workers.UvicornWorker main:app --bind 0.0.0.0:$PORT"
     healthCheckPath: "/"
     envVars:
-      - key: DATABASE_URL
+      - key: DB_USER
         fromDatabase:
           name: irhis-db
-          property: internalConnectionString
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: irhis-db
+          property: password
+      - key: DB_HOST
+        fromDatabase:
+          name: irhis-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: irhis-db
+          property: port
+      - key: DB_NAME
+        fromDatabase:
+          name: irhis-db
+          property: database
+      - key: DATABASE_URL
+        value: postgresql://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}
       - key: SECRET_KEY
         generateValue: true
       - key: ACCESS_TOKEN_EXPIRE_MINUTES
