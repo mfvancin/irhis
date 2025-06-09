@@ -92,7 +92,8 @@ const Login = () => {
         router.replace("/(tabs)/patient-homepage");
       } else {
         // Default fallback
-        router.replace("/(tabs)/homepage"); 
+        Alert.alert("Unknown Role", "Your user role is not recognized. Please contact support.");
+        router.replace("/(auth)/login"); 
       }
     } catch (error) {
       console.error("Login error:", error);

@@ -68,7 +68,8 @@ const Register = () => {
                             router.replace("/(tabs)/patient-homepage");
                         } else {
                             // Default fallback, though ideally role is always doctor or patient
-                            router.replace("/(tabs)/homepage"); 
+                            Alert.alert("Unknown Role", "Your user role is not recognized. Please contact support.");
+                            router.replace("/(auth)/login"); 
                         }
                     } else {
                         Alert.alert("Registration Successful, Login Failed", "Could not fetch user profile.");
