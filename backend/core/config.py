@@ -1,38 +1,47 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from pydantic import model_validator
-from typing import Optional
+from pydantic import PostgresDsn, field_validator, model_validator
+from typing import Optional, Any
 import os
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(extra='ignore', env_file=".env", case_sensitive=True)
+    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
-    PROJECT_NAME: str = "IRHIS API"
-    API_V1_STR: str = "/api/v1"
-    
-    DATABASE_URL: Optional[str] = None
-    
-    DB_USER: str = os.getenv("DB_USER", "postgres")
-    DB_PASSWORD: str = os.getenv("DB_PASSWORD", "postgres")
-    DB_HOST: str = os.getenv("DB_HOST", "localhost")
-    DB_PORT: str = os.getenv("DB_PORT", "5432")
-    DB_NAME: str = os.getenv("DB_NAME", "irhis")
-
-    @model_validator(mode='after')
-    def assemble_db_connection(self) -> 'Settings':
-        if self.DATABASE_URL is None:
-            self.DATABASE_URL = f"postgresql://{self.DB_USER}:{self.DB_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
-        elif self.DATABASE_URL.startswith("postgres://"):
-            self.DATABASE_URL = self.DATABASE_URL.replace("postgres://", "postgresql://", 1)
-        return self
-
-    SECRET_KEY: str = os.getenv("SECRET_KEY", "a_very_secret_key")
+    # Core application settings
+    SECRET_KEY: str
     ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 8 # 8 days
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 8  # 8 days
+
+    # Database settings (from individual env vars)
+    DB_USER: str
+    DB_PASSWORD: str
+    DB_HOST: str
+    DB_PORT: int
+    DB_NAME: str
     
-    ALLOWED_ORIGINS: list[str] = ["*"]
+    # Assembled Database URL
+    DATABASE_URL: Optional[PostgresDsn] = None
+
+    @model_validator(mode='before')
+    def assemble_db_connection(cls, v: Any) -> Any:
+        if isinstance(v, dict) and 'DATABASE_URL' not in v:
+            db_user = v.get('DB_USER')
+            db_password = v.get('DB_PASSWORD')
+            db_host = v.get('DB_HOST')
+            db_port = v.get('DB_PORT')
+            db_name = v.get('DB_NAME')
+            
+            if all([db_user, db_password, db_host, db_port, db_name]):
+                v['DATABASE_URL'] = (
+                    f"postgresql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}"
+                )
+        return v
     
+    # Local development settings
     HOST: str = "0.0.0.0"
-    PORT: int = int(os.getenv("PORT", 8000))
-    DEBUG_MODE: bool = os.getenv("DEBUG_MODE", "False").lower() in ("true", "1", "t")
+    PORT: int = 8000
+    DEBUG_MODE: bool = False
+    
+    # CORS settings
+    ALLOWED_ORIGINS: list[str] = ["*"]
 
 settings = Settings()

@@ -9,14 +9,30 @@ services:
     startCommand: "gunicorn -w $WEB_CONCURRENCY -k uvicorn.workers.UvicornWorker main:app"
     healthCheckPath: "/"
     envVars:
-      - key: DATABASE_URL
-        fromDatabase:
-          name: irhis-db
-          property: internalConnectionString
       - key: SECRET_KEY
         generateValue: true
       - key: WEB_CONCURRENCY
         value: 4
+      - key: DB_USER
+        fromDatabase:
+          name: irhis-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: irhis-db
+          property: password
+      - key: DB_HOST
+        fromDatabase:
+          name: irhis-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: irhis-db
+          property: port
+      - key: DB_NAME
+        fromDatabase:
+          name: irhis-db
+          property: database
 databases:
   - name: irhis-db
     region: frankfurt
