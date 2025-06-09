@@ -32,6 +32,10 @@ app = FastAPI(
     version="1.0.0"
 )
 
+@app.get("/", include_in_schema=False)
+def read_root():
+    return {"message": "IRHIS API is running"}
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.ALLOWED_ORIGINS,

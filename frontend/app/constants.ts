@@ -9,8 +9,9 @@ const getBaseUrl = () => {
     // This should be your local machine's IP where the backend is running
     return 'http://192.168.1.190:8000';
   }
-  // For production, use the deployed Azure App Service URL
-  return 'https://irhis-app.azurewebsites.net';
+  // For production, use the deployed Render URL
+  // IMPORTANT: Replace this with your actual Render service URL
+  return 'https://irhis-backend.onrender.com';
 };
 
 export const API_URL = getBaseUrl();

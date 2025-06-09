@@ -1,0 +1,26 @@
+services:
+  - type: web
+    name: irhis-backend
+    env: python
+    region: frankfurt
+    plan: free
+    rootDir: ./backend
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "gunicorn -w 4 -k uvicorn.workers.UvicornWorker main:app --bind 0.0.0.0:$PORT"
+    healthCheckPath: "/"
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: irhis-db
+          property: connectionString
+      - key: SECRET_KEY
+        generateValue: true
+      - key: ACCESS_TOKEN_EXPIRE_MINUTES
+        value: "1440"
+      - key: PYTHON_VERSION
+        value: 3.11.4
+
+databases:
+  - name: irhis-db
+    databaseName: irhis
+    plan: free 
